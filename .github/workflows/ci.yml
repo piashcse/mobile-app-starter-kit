@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test CLI - List screens
+        run: node dist/index.js list screens
+
+      - name: Test CLI - List frameworks
+        run: node dist/index.js list frameworks
+
+      - name: Test Expo generation
+        run: |
+          node dist/index.js init \
+            --name TestExpo \
+            --framework expo \
+            --screens signin,signup,profile,faq \
+            -p com.test.expo \
+            -o ./test-output/expo
+          ls -la ./test-output/expo/
+          ls -la ./test-output/expo/src/
+
+      - name: Test Flutter generation
+        run: |
+          node dist/index.js init \
+            --name TestFlutter \
+            --framework flutter \
+            --screens signin,signup,profile \
+            -p com.test.flutter \
+            -o ./test-output/flutter
+          ls -la ./test-output/flutter/
+          ls -la ./test-output/flutter/lib/
+
+      - name: Test KMP generation
+        run: |
+          node dist/index.js init \
+            --name TestKmp \
+            --framework kmp \
+            --screens signin,signup,profile \
+            -p com.test.kmp \
+            -o ./test-output/kmp
+          ls -la ./test-output/kmp/
