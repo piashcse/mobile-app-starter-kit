@@ -40,8 +40,20 @@ export async function generateExpoProject(
   await generateExpoRoutes(config, context);
 
   // Step 4: Generate API slice with selected endpoints
-  logger.step(4, 4, 'Setting up RTK Query API...');
+  logger.step(4, 5, 'Setting up RTK Query API...');
   await generateRtkApiSlice(config, context);
+
+  // Step 5: Run Expo prebuild for native folders
+  logger.step(5, 5, 'Running Expo prebuild for native folders (this may take a minute)...');
+  try {
+    const { execSync } = await import('child_process');
+    execSync('npx expo prebuild --no-install', {
+      cwd: config.outputDir,
+      stdio: 'inherit',
+    });
+  } catch (error) {
+    logger.warn('Expo prebuild failed. You may need to run "npx expo prebuild" manually later.');
+  }
 }
 
 async function generateExpoRoutes(
