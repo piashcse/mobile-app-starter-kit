@@ -47,6 +47,7 @@ export async function copyTemplateFile(
 
 /**
  * Recursively copy a directory, processing .hbs templates
+ * Also processes Handlebars placeholders in filenames
  */
 export async function copyTemplateDir(
   srcDir: string,
@@ -57,9 +58,17 @@ export async function copyTemplateDir(
 
   for (const entry of entries) {
     const srcPath = path.join(srcDir, entry.name);
-    const destName = entry.name.endsWith('.hbs')
+    
+    // Process filename: replace .hbs and render any Handlebars placeholders
+    let destName = entry.name.endsWith('.hbs')
       ? entry.name.replace(/\.hbs$/, '')
       : entry.name;
+    
+    if (destName.includes('{{')) {
+      const template = Handlebars.compile(destName);
+      destName = template(context);
+    }
+    
     const destPath = path.join(destDir, destName);
 
     if (entry.isDirectory()) {

@@ -12,12 +12,30 @@ export async function generateFlutterProject(
   const baseDir = path.join(templatesDir, 'flutter', 'base');
   const screensDir = path.join(templatesDir, 'flutter', 'screens');
 
+  // Step 0: Run flutter create for latest native folders
+  logger.step(1, 5, 'Generating latest native Flutter project...');
+  try {
+    const { execSync } = await import('child_process');
+    const projectName = config.name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    execSync(`flutter create --org ${config.packageName.split('.').slice(0, -1).join('.')} --project-name ${projectName} --platforms android,ios .`, {
+      cwd: config.outputDir,
+      stdio: 'inherit',
+    });
+    
+    // Clean up default files that we will replace
+    await fs.remove(path.join(config.outputDir, 'lib'));
+    await fs.remove(path.join(config.outputDir, 'test'));
+    await fs.remove(path.join(config.outputDir, 'pubspec.yaml'));
+  } catch (error) {
+    logger.warn('Flutter create failed. Falling back to base template.');
+  }
+
   // Step 1: Copy base template
-  logger.step(1, 4, 'Copying base Flutter project...');
+  logger.step(2, 5, 'Applying base template...');
   await copyTemplateDir(baseDir, config.outputDir, context);
 
   // Step 2: Copy selected screen features (Clean Architecture)
-  logger.step(2, 4, 'Adding selected features...');
+  logger.step(3, 5, 'Adding selected features...');
   for (const screenId of config.screens) {
     const screenSrcDir = path.join(screensDir, screenId);
     if (await fs.pathExists(screenSrcDir)) {
@@ -35,11 +53,11 @@ export async function generateFlutterProject(
   }
 
   // Step 3: Generate GoRouter routes
-  logger.step(3, 4, 'Generating routes...');
+  logger.step(4, 5, 'Generating routes...');
   await generateFlutterRoutes(config, context);
 
   // Step 4: Generate provider registrations
-  logger.step(4, 4, 'Setting up Riverpod providers...');
+  logger.step(5, 5, 'Setting up Riverpod providers...');
   await generateFlutterProviders(config, context);
 }
 
