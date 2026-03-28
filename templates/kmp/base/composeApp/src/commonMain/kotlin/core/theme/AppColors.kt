@@ -1,6 +1,7 @@
 package core.theme
 
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
 
 object AppColors {
@@ -26,7 +27,25 @@ object AppColors {
 
     val GradientStart = Color(0xFF6366F1)
     val GradientEnd = Color(0xFF8B5CF6)
+    
+    // Light equivalents
+    val BackgroundLight = Color(0xFFF8FAFC)
+    val SurfaceLightCard = Color(0xFFFFFFFF)
+    val TextPrimaryLight = Color(0xFF0F172A)
+    val TextSecondaryLight = Color(0xFF475569)
 }
+
+val LightColorScheme = lightColorScheme(
+    primary = AppColors.Primary,
+    secondary = AppColors.Accent,
+    background = AppColors.BackgroundLight,
+    surface = AppColors.SurfaceLightCard,
+    error = AppColors.Error,
+    onPrimary = Color.White,
+    onBackground = AppColors.TextPrimaryLight,
+    onSurface = AppColors.TextPrimaryLight,
+    onError = Color.White,
+)
 
 val DarkColorScheme = darkColorScheme(
     primary = AppColors.Primary,
