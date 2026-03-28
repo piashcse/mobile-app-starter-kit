@@ -20,7 +20,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
-            implementation("org.jetbrains.androidx.navigation:navigation-compose:2.8.0-alpha10")
+            implementation(libs.navigation.compose)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
