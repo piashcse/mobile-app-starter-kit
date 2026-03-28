@@ -23,7 +23,7 @@ One command generates a **fully scaffolded mobile app** with:
 
 - ✅ Selected screens (auth, profile, settings, etc.)
 - ✅ Mock API layer (hardcoded JSON — ready to swap for real APIs)
-- ✅ Navigation (Expo Router / GoRouter / Voyager)
+- ✅ Navigation (Expo Router / GoRouter / Compose Navigation)
 - ✅ State management (RTK Query + Zustand / Riverpod / MVVM)
 - ✅ Theming (dark mode, premium color system)
 - ✅ Reusable components (Button, Input, Card, etc.)
@@ -37,7 +37,7 @@ One command generates a **fully scaffolded mobile app** with:
 |-----------|-----------------|-----------|------------|--------------|
 | **Expo React Native** | RTK Query + Zustand | RTK Query (createApi) | Expo Router | Feature-based |
 | **Flutter** | Riverpod | Dio + Mock Interceptor | GoRouter | Clean Architecture |
-| **KMP** | ViewModel + StateFlow | Ktor Mock Engine | Voyager | MVVM |
+| **KMP** | ViewModel + StateFlow | Ktor Mock Engine | Compose Navigation | MVVM |
 
 ---
 
@@ -150,7 +150,7 @@ my-app/
 │   │       ├── model/     #   Data classes
 │   │       ├── viewmodel/ #   ViewModel + StateFlow
 │   │       └── view/      #   Composable screen
-│   ├── navigation/        # Voyager navigation
+│   ├── navigation/        # Compose Navigation
 │   └── di/                # Dependency injection
 └── build.gradle.kts
 ```

@@ -61,30 +61,40 @@ async function generateKmpNavigation(
   await fs.ensureDir(navDir);
 
   const imports: string[] = [];
-  const screenDefs: string[] = [];
-  const tabDefs: string[] = [];
+  const screens: string[] = [];
+  const composables: string[] = [];
 
   for (const screenId of config.screens) {
     const cases = screenIdToCases(screenId);
     const moduleDir = screenId.replace(/-/g, '');
     imports.push(`import features.${moduleDir}.view.${cases.pascal}Screen`);
-
-    screenDefs.push(`    object ${cases.pascal} : Screen {
-        @Composable
-        override fun Content() {
-            ${cases.pascal}Screen()
-        }
-    }`);
+    
+    screens.push(`@Serializable\nobject ${cases.pascal}`);
+    composables.push(`        composable<${cases.pascal}> {\n            ${cases.pascal}Screen()\n        }`);
   }
 
   const navContent = `package navigation
 
-import cafe.adriel.voyager.core.screen.Screen
 import androidx.compose.runtime.Composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import kotlinx.serialization.Serializable
 ${imports.join('\n')}
 
-sealed class AppScreen {
-${screenDefs.join('\n\n')}
+// Routes
+${screens.join('\n')}
+
+@Composable
+fun AppNavigation() {
+    val navController = rememberNavController()
+    
+    NavHost(
+        navController = navController,
+        startDestination = ${screenIdToCases(config.screens[0] || 'SignIn').pascal}
+    ) {
+${composables.join('\n\n')}
+    }
 }
 `;
 
