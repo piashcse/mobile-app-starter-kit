@@ -183,9 +183,10 @@ class MainActivity : ComponentActivity() {
   await fs.ensureDir(kotlinDir);
   await fs.writeFile(path.join(kotlinDir, 'MainActivity.kt'), mainActivity);
 
-  // 4. iosApp Module (Placeholder structure)
-  const iosAppDir = path.join(outputDir, 'iosApp', 'iosApp');
-  await fs.ensureDir(iosAppDir);
+  // 4. iosApp Module (More complete structure)
+  const iosAppDir = path.join(outputDir, 'iosApp');
+  const iosContentDir = path.join(iosAppDir, 'iosApp');
+  await fs.ensureDir(iosContentDir);
   
   const iosAppSwift = `import SwiftUI
 import ComposeApp
@@ -199,7 +200,7 @@ struct iOSApp: App {
 	}
 }
 `;
-  await fs.writeFile(path.join(iosAppDir, 'iosApp.swift'), iosAppSwift);
+  await fs.writeFile(path.join(iosContentDir, 'iosApp.swift'), iosAppSwift);
 
   const contentViewSwift = `import SwiftUI
 import ComposeApp
@@ -219,7 +220,45 @@ struct ComposeView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
 `;
-  await fs.writeFile(path.join(iosAppDir, 'ContentView.swift'), contentViewSwift);
+  await fs.writeFile(path.join(iosContentDir, 'ContentView.swift'), contentViewSwift);
+
+  const infoPlist = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+</dict>
+</plist>
+`;
+  await fs.writeFile(path.join(iosContentDir, 'Info.plist'), infoPlist);
 
   // 5. Shared MainView Bridges
   const androidMainDir = path.join(outputDir, 'composeApp', 'src', 'androidMain', 'kotlin');
@@ -229,6 +268,8 @@ struct ComposeView: UIViewControllerRepresentable {
   const iosMainDir = path.join(outputDir, 'composeApp', 'src', 'iosMain', 'kotlin');
   await fs.ensureDir(iosMainDir);
   await fs.writeFile(path.join(iosMainDir, 'MainViewController.kt'), `import androidx.compose.ui.window.ComposeUIViewController\nimport navigation.AppNavigation\n\nfun MainViewController() = ComposeUIViewController {\n    AppNavigation()\n}\n`);
+  
+  logger.success('KMP native platform files generated.');
 }
 
 async function generateKmpNavigation(
@@ -258,6 +299,16 @@ async function generateKmpNavigation(
     composables.push(`        composable<${cases.pascal}> {\n            ${cases.pascal}Screen()\n        }`);
   }
 
+  // Improved start destination logic
+  let startScreenId = config.screens[0] || 'signin';
+  if (config.screens.includes('onboarding')) {
+    startScreenId = 'onboarding';
+  } else if (config.screens.includes('signin')) {
+    startScreenId = 'signin';
+  }
+  
+  const startDest = screenIdToCases(startScreenId).pascal;
+
   const navContent = `package navigation
 
 import androidx.compose.runtime.Composable
@@ -276,7 +327,7 @@ fun AppNavigation() {
     
     NavHost(
         navController = navController,
-        startDestination = ${screenIdToCases(config.screens[0] || 'SignIn').pascal}
+        startDestination = ${startDest}
     ) {
 ${composables.join('\n\n')}
     }
