@@ -13,11 +13,11 @@ export async function generateExpoProject(
   const screensDir = path.join(templatesDir, 'expo', 'screens');
 
   // Step 1: Copy base template
-  logger.step(1, 4, 'Copying base Expo project...');
+  logger.step(1, 5, 'Copying base Expo project...');
   await copyTemplateDir(baseDir, config.outputDir, context);
 
   // Step 2: Copy selected screen templates
-  logger.step(2, 4, 'Adding selected screens...');
+  logger.step(2, 5, 'Adding selected screens...');
   for (const screenId of config.screens) {
     const screenSrcDir = path.join(screensDir, screenId);
     if (await fs.pathExists(screenSrcDir)) {
@@ -36,7 +36,7 @@ export async function generateExpoProject(
   }
 
   // Step 3: Generate dynamic route files in app/ directory
-  logger.step(3, 4, 'Generating routes...');
+  logger.step(3, 5, 'Generating routes...');
   await generateExpoRoutes(config, context);
 
   // Step 4: Generate API slice with selected endpoints
@@ -44,15 +44,29 @@ export async function generateExpoProject(
   await generateRtkApiSlice(config, context);
 
   // Step 5: Run Expo prebuild for native folders
-  logger.step(5, 5, 'Running Expo prebuild for native folders (this may take a minute)...');
+  logger.step(5, 5, 'Generating native android and ios folders...');
   try {
     const { execSync } = await import('child_process');
-    execSync('npx expo prebuild --no-install', {
+    // Use npx -y to avoid interactive prompts
+    execSync('npx -y expo prebuild --no-install --platform all', {
       cwd: config.outputDir,
-      stdio: 'inherit',
+      stdio: 'ignore', // Keep it quiet unless it fails
     });
+    logger.success('Native folders generated successfully.');
   } catch (error) {
-    logger.warn('Expo prebuild failed. You may need to run "npx expo prebuild" manually later.');
+    logger.warn('Could not generate native folders automatically.');
+    logger.info('Creating basic placeholders and providing manual instructions...');
+    
+    // Manual fallback for android/ios folders
+    await fs.ensureDir(path.join(config.outputDir, 'android'));
+    await fs.ensureDir(path.join(config.outputDir, 'ios'));
+    
+    logger.info('To generate full native projects manually, run:');
+    logger.blank();
+    logger.info(`  cd ${config.outputDir}`);
+    logger.info('  npm install');
+    logger.info('  npx expo prebuild');
+    logger.blank();
   }
 }
 
@@ -62,7 +76,22 @@ async function generateExpoRoutes(
 ): Promise<void> {
   const appDir = path.join(config.outputDir, 'app');
   await fs.ensureDir(appDir);
-  await fs.ensureDir(path.join(appDir, '(auth)'));
+
+  const hasAuth = config.screens.some((s) =>
+    ['signin', 'signup', 'forgot-password'].includes(s)
+  );
+  const hasOnboarding = config.screens.includes('onboarding');
+  
+  // Decide start screens
+  const startAuthScreen = config.screens.includes('signin') ? 'signin' : 
+                         config.screens.includes('signup') ? 'signup' : 
+                         config.screens.includes('forgot-password') ? 'forgot-password' : '';
+  
+  const startMainScreen = config.screens.includes('profile') ? 'profile' : 
+                         config.screens.includes('onboarding') ? 'onboarding' :
+                         config.screens.find(s => !['signin', 'signup', 'forgot-password'].includes(s)) || '';
+
+  if (hasAuth) await fs.ensureDir(path.join(appDir, '(auth)'));
   await fs.ensureDir(path.join(appDir, '(main)'));
 
   // Root layout
@@ -74,7 +103,7 @@ export default function RootLayout() {
   return (
     <Provider store={store}>
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
+        ${hasAuth ? '<Stack.Screen name="(auth)" />' : ''}
         <Stack.Screen name="(main)" />
       </Stack>
     </Provider>
@@ -83,19 +112,27 @@ export default function RootLayout() {
 `;
   await fs.writeFile(path.join(appDir, '_layout.tsx'), rootLayout);
 
-  // Index redirect
+  // Index redirect logic
   const indexContent = `import { Redirect } from 'expo-router';
 import { useAuthStore } from '../src/store/authStore';
 
 export default function Index() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  return <Redirect href={isAuthenticated ? '/(main)/profile' : '/(auth)/signin'} />;
+  
+  // Priority: Onboarding -> Auth (if not auth) -> Main (if auth)
+  ${hasOnboarding ? 'return <Redirect href="/(main)/onboarding" />;' : `
+  if (!isAuthenticated && ${hasAuth}) {
+    return <Redirect href="/(auth)/${startAuthScreen}" />;
+  }
+  return <Redirect href="/(main)/${startMainScreen}" />;
+  `}
 }
 `;
   await fs.writeFile(path.join(appDir, 'index.tsx'), indexContent);
 
   // Auth group layout
-  const authLayout = `import { Stack } from 'expo-router';
+  if (hasAuth) {
+    const authLayout = `import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
   return (
@@ -116,7 +153,8 @@ ${config.screens.includes('forgot-password') ? "      <Stack.Screen name=\"forgo
   );
 }
 `;
-  await fs.writeFile(path.join(appDir, '(auth)', '_layout.tsx'), authLayout);
+    await fs.writeFile(path.join(appDir, '(auth)', '_layout.tsx'), authLayout);
+  }
 
   // Main group layout
   const mainScreens: { id: string; title: string }[] = [];
@@ -151,7 +189,7 @@ export default function MainLayout() {
         contentStyle: { backgroundColor: '#0F172A' },
       }}
     >
-${mainScreens.map((s) => `      <Stack.Screen name="${s.id}" options={{ title: '${s.title}' }} />`).join('\n')}
+${mainScreens.map((s) => `      <Stack.Screen name="${s.id}" options={{ title: '${s.title}'${s.id === 'onboarding' ? ', headerShown: false' : ''} }} />`).join('\n')}
     </Stack>
   );
 }
