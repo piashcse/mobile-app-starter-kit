@@ -1,8 +1,14 @@
 import path from 'path';
 import fs from 'fs-extra';
 import type { ProjectConfig } from '../config.js';
-import { getTemplatesDir, copyTemplateDir, screenIdToCases } from '../utils/file.js';
+import { AUTH_SCREENS } from '../config.js';
+import {
+  getTemplatesDir,
+  copyTemplateDir,
+  screenIdToCases,
+} from '../utils/file.js';
 import { logger } from '../utils/logger.js';
+import { writeExpoDesign, writeExpoI18n } from '../design/generate.js';
 
 export async function generateExpoProject(
   config: ProjectConfig,
@@ -13,61 +19,39 @@ export async function generateExpoProject(
   const screensDir = path.join(templatesDir, 'expo', 'screens');
 
   // Step 1: Copy base template
-  logger.step(1, 5, 'Copying base Expo project...');
+  logger.step(1, 4, 'Copying base Expo project...');
   await copyTemplateDir(baseDir, config.outputDir, context);
+  await writeExpoDesign(config.outputDir);
+  await writeExpoI18n(config.outputDir);
 
   // Step 2: Copy selected screen templates
-  logger.step(2, 5, 'Adding selected screens...');
+  logger.step(2, 4, 'Adding selected screens...');
   for (const screenId of config.screens) {
     const screenSrcDir = path.join(screensDir, screenId);
-    if (await fs.pathExists(screenSrcDir)) {
-      // Copy screen component to features directory
-      const screenDestDir = path.join(
-        config.outputDir,
-        'src',
-        'features',
-        screenId
+    if (!(await fs.pathExists(screenSrcDir))) {
+      throw new Error(
+        `Missing Expo template for screen "${screenId}" (${screenSrcDir}).`
       );
-      await copyTemplateDir(screenSrcDir, screenDestDir, {
-        ...context,
-        ...screenIdToCases(screenId),
-      });
     }
+    const screenDestDir = path.join(
+      config.outputDir,
+      'src',
+      'features',
+      screenId
+    );
+    await copyTemplateDir(screenSrcDir, screenDestDir, {
+      ...context,
+      ...screenIdToCases(screenId),
+    });
   }
 
   // Step 3: Generate dynamic route files in app/ directory
-  logger.step(3, 5, 'Generating routes...');
+  logger.step(3, 4, 'Generating routes...');
   await generateExpoRoutes(config, context);
 
   // Step 4: Generate API slice with selected endpoints
-  logger.step(4, 5, 'Setting up RTK Query API...');
-  await generateRtkApiSlice(config, context);
-
-  // Step 5: Run Expo prebuild for native folders
-  logger.step(5, 5, 'Generating native android and ios folders...');
-  try {
-    const { execSync } = await import('child_process');
-    // Use npx -y to avoid interactive prompts
-    execSync('npx -y expo prebuild --no-install --platform all', {
-      cwd: config.outputDir,
-      stdio: 'ignore', // Keep it quiet unless it fails
-    });
-    logger.success('Native folders generated successfully.');
-  } catch (error) {
-    logger.warn('Could not generate native folders automatically.');
-    logger.info('Creating basic placeholders and providing manual instructions...');
-    
-    // Manual fallback for android/ios folders
-    await fs.ensureDir(path.join(config.outputDir, 'android'));
-    await fs.ensureDir(path.join(config.outputDir, 'ios'));
-    
-    logger.info('To generate full native projects manually, run:');
-    logger.blank();
-    logger.info(`  cd ${config.outputDir}`);
-    logger.info('  npm install');
-    logger.info('  npx expo prebuild');
-    logger.blank();
-  }
+  logger.step(4, 4, 'Setting up RTK Query API...');
+  await generateRtkApiSlice(config);
 }
 
 async function generateExpoRoutes(
@@ -77,35 +61,48 @@ async function generateExpoRoutes(
   const appDir = path.join(config.outputDir, 'app');
   await fs.ensureDir(appDir);
 
-  const hasAuth = config.screens.some((s) =>
-    ['signin', 'signup', 'forgot-password'].includes(s)
+  const authScreens = config.screens.filter((s) =>
+    AUTH_SCREENS.includes(s as (typeof AUTH_SCREENS)[number])
   );
-  const hasOnboarding = config.screens.includes('onboarding');
-  
-  // Decide start screens
-  const startAuthScreen = config.screens.includes('signin') ? 'signin' : 
-                         config.screens.includes('signup') ? 'signup' : 
-                         config.screens.includes('forgot-password') ? 'forgot-password' : '';
-  
-  const startMainScreen = config.screens.includes('profile') ? 'profile' : 
-                         config.screens.includes('onboarding') ? 'onboarding' :
-                         config.screens.find(s => !['signin', 'signup', 'forgot-password'].includes(s)) || '';
+  const mainScreens = config.screens.filter((s) => !authScreens.includes(s));
+  const hasAuth = authScreens.length > 0;
+  const hasMain = mainScreens.length > 0;
 
-  if (hasAuth) await fs.ensureDir(path.join(appDir, '(auth)'));
-  await fs.ensureDir(path.join(appDir, '(main)'));
+  const firstAuth = authScreens[0] ? screenIdToCases(authScreens[0]).kebab : '';
+  const firstMain = mainScreens[0] ? screenIdToCases(mainScreens[0]).kebab : '';
+  const firstNonOnboarding =
+    mainScreens.find((s) => s !== 'onboarding') ?? mainScreens[0] ?? '';
+  const postAuth = firstNonOnboarding || firstMain || firstAuth;
 
   // Root layout
-  const rootLayout = `import { Stack } from 'expo-router';
+  const rootLayout = `import { useEffect } from 'react';
+import { Stack } from 'expo-router';
 import { Provider } from 'react-redux';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { store } from '../src/store/store';
+import { useAuthStore } from '../src/store/authStore';
+import { ThemeProvider } from '../src/theme/ThemeProvider';
+import { I18nProvider } from '../src/i18n';
 
 export default function RootLayout() {
+  const hydrate = useAuthStore((state) => state.hydrate);
+
+  useEffect(() => {
+    void hydrate();
+  }, [hydrate]);
+
   return (
     <Provider store={store}>
-      <Stack screenOptions={{ headerShown: false }}>
-        ${hasAuth ? '<Stack.Screen name="(auth)" />' : ''}
-        <Stack.Screen name="(main)" />
-      </Stack>
+      <SafeAreaProvider>
+        <I18nProvider>
+          <ThemeProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              ${hasAuth ? '<Stack.Screen name="(auth)" />' : ''}
+              ${hasMain ? '<Stack.Screen name="(main)" />' : ''}
+            </Stack>
+          </ThemeProvider>
+        </I18nProvider>
+      </SafeAreaProvider>
     </Provider>
   );
 }
@@ -113,91 +110,113 @@ export default function RootLayout() {
   await fs.writeFile(path.join(appDir, '_layout.tsx'), rootLayout);
 
   // Index redirect logic
+  const authenticatedRedirect = hasMain
+    ? `return <Redirect href="/(main)/${postAuth}" />;`
+    : `return <Redirect href="/(auth)/${firstAuth}" />;`;
+
+  const unauthenticatedRedirect = hasAuth
+    ? `return <Redirect href="/(auth)/${firstAuth}" />;`
+    : hasMain
+      ? `return <Redirect href="/(main)/${firstMain}" />;`
+      : 'return null;';
+
   const indexContent = `import { Redirect } from 'expo-router';
 import { useAuthStore } from '../src/store/authStore';
 
 export default function Index() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  
-  // Priority: Onboarding -> Auth (if not auth) -> Main (if auth)
-  ${hasOnboarding ? 'return <Redirect href="/(main)/onboarding" />;' : `
-  if (!isAuthenticated && ${hasAuth}) {
-    return <Redirect href="/(auth)/${startAuthScreen}" />;
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+
+  // Wait for the persisted session to load before choosing a route.
+  if (!hasHydrated) return null;
+
+  if (isAuthenticated) {
+    ${authenticatedRedirect}
   }
-  return <Redirect href="/(main)/${startMainScreen}" />;
-  `}
+
+  // New users see onboarding first when it is part of the project.
+  ${
+    mainScreens.includes('onboarding')
+      ? 'return <Redirect href="/(main)/onboarding" />;'
+      : unauthenticatedRedirect
+  }
 }
 `;
   await fs.writeFile(path.join(appDir, 'index.tsx'), indexContent);
 
   // Auth group layout
   if (hasAuth) {
+    const authDir = path.join(appDir, '(auth)');
+    await fs.ensureDir(authDir);
     const authLayout = `import { Stack } from 'expo-router';
+import { useAppTheme } from '../../src/theme';
 
 export default function AuthLayout() {
+  const { colors } = useAppTheme();
+
   return (
     <Stack
       screenOptions={{
         headerShown: true,
-        headerBackTitleVisible: false,
-        headerTintColor: '#6366F1',
-        headerStyle: { backgroundColor: '#0F172A' },
-        headerTitleStyle: { color: '#F8FAFC' },
-        contentStyle: { backgroundColor: '#0F172A' },
+        headerBackButtonDisplayMode: 'minimal',
+        headerTintColor: colors.primary,
+        headerStyle: { backgroundColor: colors.background },
+        headerTitleStyle: { color: colors.textPrimary },
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
-${config.screens.includes('signin') ? "      <Stack.Screen name=\"signin\" options={{ title: 'Sign In', headerShown: false }} />" : ''}
-${config.screens.includes('signup') ? "      <Stack.Screen name=\"signup\" options={{ title: 'Sign Up' }} />" : ''}
-${config.screens.includes('forgot-password') ? "      <Stack.Screen name=\"forgot-password\" options={{ title: 'Forgot Password' }} />" : ''}
+${authScreens
+  .map((id) => {
+    const cases = screenIdToCases(id);
+    const isFirst = id === authScreens[0];
+    return `      <Stack.Screen name="${id}" options={{ title: '${cases.title}'${
+      isFirst ? ', headerShown: false' : ''
+    } }} />`;
+  })
+  .join('\n')}
     </Stack>
   );
 }
 `;
-    await fs.writeFile(path.join(appDir, '(auth)', '_layout.tsx'), authLayout);
+    await fs.writeFile(path.join(authDir, '_layout.tsx'), authLayout);
   }
 
   // Main group layout
-  const mainScreens: { id: string; title: string }[] = [];
-  const mainScreenMap: Record<string, string> = {
-    profile: 'Profile',
-    settings: 'Settings',
-    faq: 'FAQ',
-    'privacy-policy': 'Privacy Policy',
-    terms: 'Terms',
-    about: 'About',
-    notifications: 'Notifications',
-    'change-password': 'Change Password',
-    onboarding: 'Welcome',
-  };
-
-  for (const id of config.screens) {
-    if (mainScreenMap[id]) {
-      mainScreens.push({ id, title: mainScreenMap[id] });
-    }
-  }
-
-  const mainLayout = `import { Stack } from 'expo-router';
+  if (hasMain) {
+    const mainDir = path.join(appDir, '(main)');
+    await fs.ensureDir(mainDir);
+    const mainLayout = `import { Stack } from 'expo-router';
+import { useAppTheme } from '../../src/theme';
 
 export default function MainLayout() {
+  const { colors } = useAppTheme();
+
   return (
     <Stack
       screenOptions={{
-        headerBackTitleVisible: false,
-        headerTintColor: '#6366F1',
-        headerStyle: { backgroundColor: '#0F172A' },
-        headerTitleStyle: { color: '#F8FAFC' },
-        contentStyle: { backgroundColor: '#0F172A' },
+        headerBackButtonDisplayMode: 'minimal',
+        headerTintColor: colors.primary,
+        headerStyle: { backgroundColor: colors.background },
+        headerTitleStyle: { color: colors.textPrimary },
+        contentStyle: { backgroundColor: colors.background },
       }}
     >
-${mainScreens.map((s) => `      <Stack.Screen name="${s.id}" options={{ title: '${s.title}'${s.id === 'onboarding' ? ', headerShown: false' : ''} }} />`).join('\n')}
+${mainScreens
+  .map((id) => {
+    const cases = screenIdToCases(id);
+    return `      <Stack.Screen name="${id}" options={{ title: '${cases.title}'${
+      id === 'onboarding' ? ', headerShown: false' : ''
+    } }} />`;
+  })
+  .join('\n')}
     </Stack>
   );
 }
 `;
-  await fs.writeFile(path.join(appDir, '(main)', '_layout.tsx'), mainLayout);
+    await fs.writeFile(path.join(mainDir, '_layout.tsx'), mainLayout);
+  }
 
   // Generate route files for each screen
-  const authScreens = ['signin', 'signup', 'forgot-password'];
   for (const screenId of config.screens) {
     const cases = screenIdToCases(screenId);
     const isAuth = authScreens.includes(screenId);
@@ -214,16 +233,15 @@ export default function ${cases.pascal}Route() {
       routeContent
     );
   }
+
+  // Keep generated files from referencing screens that were not selected.
+  void context;
 }
 
-async function generateRtkApiSlice(
-  config: ProjectConfig,
-  context: Record<string, unknown>
-): Promise<void> {
+async function generateRtkApiSlice(config: ProjectConfig): Promise<void> {
   const apiDir = path.join(config.outputDir, 'src', 'api');
   await fs.ensureDir(apiDir);
 
-  // Build endpoint methods based on selected screens
   const endpoints: string[] = [];
 
   if (config.screens.includes('signin')) {
@@ -240,7 +258,7 @@ async function generateRtkApiSlice(
 
   if (config.screens.includes('signup')) {
     endpoints.push(`    register: builder.mutation<MessageResponse, RegisterRequest>({
-      queryFn: async (data) => {
+      queryFn: async () => {
         await delay(800);
         return { data: mockData.auth.register.success };
       },
@@ -286,7 +304,7 @@ async function generateRtkApiSlice(
     endpoints.push(`    getNotifications: builder.query<NotificationItem[], void>({
       queryFn: async () => {
         await delay(500);
-        return { data: mockData.notifications.items };
+        return { data: mockData.notifications.items as NotificationItem[] };
       },
       providesTags: ['Notifications'],
     })`);
@@ -301,24 +319,28 @@ async function generateRtkApiSlice(
     })`);
   }
 
-  // Build type imports based on screens
   const types: string[] = ['MessageResponse'];
-  if (config.screens.includes('signin')) types.push('LoginRequest', 'LoginResponse');
+  if (config.screens.includes('signin'))
+    types.push('LoginRequest', 'LoginResponse');
   if (config.screens.includes('signup')) types.push('RegisterRequest');
   if (config.screens.includes('profile')) types.push('UserProfile');
   if (config.screens.includes('faq')) types.push('FaqItem');
   if (config.screens.includes('notifications')) types.push('NotificationItem');
-  if (config.screens.includes('change-password')) types.push('ChangePasswordRequest');
+  if (config.screens.includes('change-password'))
+    types.push('ChangePasswordRequest');
 
-  // Build hook exports
   const hooks: string[] = [];
   if (config.screens.includes('signin')) hooks.push('useLoginMutation');
   if (config.screens.includes('signup')) hooks.push('useRegisterMutation');
-  if (config.screens.includes('forgot-password')) hooks.push('useForgotPasswordMutation');
-  if (config.screens.includes('profile')) hooks.push('useGetProfileQuery', 'useUpdateProfileMutation');
+  if (config.screens.includes('forgot-password'))
+    hooks.push('useForgotPasswordMutation');
+  if (config.screens.includes('profile'))
+    hooks.push('useGetProfileQuery', 'useUpdateProfileMutation');
   if (config.screens.includes('faq')) hooks.push('useGetFaqQuery');
-  if (config.screens.includes('notifications')) hooks.push('useGetNotificationsQuery');
-  if (config.screens.includes('change-password')) hooks.push('useChangePasswordMutation');
+  if (config.screens.includes('notifications'))
+    hooks.push('useGetNotificationsQuery');
+  if (config.screens.includes('change-password'))
+    hooks.push('useChangePasswordMutation');
 
   const tags: string[] = [];
   if (config.screens.includes('profile')) tags.push("'Profile'");

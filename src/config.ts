@@ -6,6 +6,8 @@ export interface ScreenConfig {
   description: string;
   category: 'auth' | 'user' | 'onboarding' | 'info' | 'feature';
   defaultIncluded: boolean;
+  /** Routes/screens this screen links to. Used to keep navigation valid. */
+  requires?: string[];
 }
 
 export interface ProjectConfig {
@@ -16,11 +18,16 @@ export interface ProjectConfig {
   outputDir: string;
 }
 
-export const FRAMEWORKS: { id: Framework; name: string; description: string }[] = [
+export const FRAMEWORKS: {
+  id: Framework;
+  name: string;
+  description: string;
+}[] = [
   {
     id: 'expo',
     name: 'Expo React Native',
-    description: 'React Native with Expo, RTK Query, Zustand, and Expo Router',
+    description:
+      'React Native with Expo SDK 58, RTK Query, Zustand, and Expo Router',
   },
   {
     id: 'flutter',
@@ -30,7 +37,7 @@ export const FRAMEWORKS: { id: Framework; name: string; description: string }[] 
   {
     id: 'kmp',
     name: 'KMP (Kotlin Multiplatform)',
-    description: 'Compose Multiplatform with MVVM, Voyager, and Ktor',
+    description: 'Compose Multiplatform with MVVM, Navigation 3, and Ktor',
   },
 ];
 
@@ -121,6 +128,14 @@ export const SCREENS: ScreenConfig[] = [
   },
 ];
 
-export const DEFAULT_SCREENS = SCREENS
-  .filter((s) => s.defaultIncluded)
-  .map((s) => s.id);
+export const ALL_SCREEN_IDS = SCREENS.map((s) => s.id);
+
+export const DEFAULT_SCREENS = SCREENS.filter((s) => s.defaultIncluded).map(
+  (s) => s.id
+);
+
+export const AUTH_SCREENS = ['signin', 'signup', 'forgot-password'] as const;
+
+export const MAIN_SCREENS = SCREENS.filter(
+  (s) => !AUTH_SCREENS.includes(s.id as (typeof AUTH_SCREENS)[number])
+).map((s) => s.id);

@@ -1,0 +1,94 @@
+package features.about.view
+
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import app.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import core.components.AppCard
+import core.theme.AppSizes
+import core.theme.AppSpacing
+
+@Composable
+fun AboutScreen() {
+    
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(AppSizes.screenPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("📱", style = MaterialTheme.typography.displayLarge)
+        Spacer(Modifier.height(AppSpacing.md))
+        Text(
+            "{{appTitle}}",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        Text(
+            stringResource(Res.string.common_version, "1.0.0"),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(AppSpacing.lg))
+
+        AppCard {
+            Text(
+                stringResource(Res.string.about_description),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(Modifier.height(AppSpacing.md))
+
+        AppCard {
+            InfoRow(
+                "🌐",
+                stringResource(Res.string.common_website),
+                "https://example.com",
+            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            InfoRow(
+                "📧",
+                stringResource(Res.string.common_support),
+                "support@example.com",
+            )
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(icon: String, label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = AppSpacing.sm),
+    ) {
+        Text(icon, style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.width(AppSpacing.sm))
+        Column {
+            Text(
+                label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                value,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
+    }
+}

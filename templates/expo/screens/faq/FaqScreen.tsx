@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { ScreenWrapper, LoadingSpinner } from '../../components';
-import { colors, typography, spacing, borderRadius } from '../../theme';
+import { makeStyles, typography, spacing, borderRadius } from '../../theme';
 import { useGetFaqQuery } from '../../api/apiSlice';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -9,6 +9,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 export default function FaqScreen() {
+  const styles = useStyles();
   const { data: faqItems, isLoading } = useGetFaqQuery();
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -56,7 +57,7 @@ export default function FaqScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -102,4 +103,4 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     lineHeight: 22,
   },
-});
+}));

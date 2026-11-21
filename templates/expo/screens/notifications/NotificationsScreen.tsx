@@ -1,17 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { ScreenWrapper, AppCard, LoadingSpinner } from '../../components';
-import { colors, typography, spacing, borderRadius } from '../../theme';
+import { makeStyles, useAppTheme, typography, spacing, borderRadius } from '../../theme';
 import { useGetNotificationsQuery } from '../../api/apiSlice';
 
-const typeColors = {
-  info: colors.info,
-  success: colors.success,
-  warning: colors.warning,
-  error: colors.error,
-};
-
 export default function NotificationsScreen() {
+  const styles = useStyles();
+  const { colors } = useAppTheme();
+  const typeColors = {
+    info: colors.info,
+    success: colors.success,
+    warning: colors.warning,
+    error: colors.error,
+  };
   const { data: notifications, isLoading } = useGetNotificationsQuery();
 
   if (isLoading) return <LoadingSpinner fullScreen message="Loading notifications..." />;
@@ -62,7 +63,7 @@ export default function NotificationsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => StyleSheet.create({
   container: { flex: 1, padding: spacing.lg },
   title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.lg },
   list: { gap: spacing.sm, paddingBottom: spacing.xxl },
@@ -77,4 +78,4 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingTop: spacing.xxl },
   emptyEmoji: { fontSize: 48, marginBottom: spacing.md },
   emptyText: { ...typography.body, color: colors.textMuted },
-});
+}));

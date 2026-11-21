@@ -9,3 +9,14 @@ coverage/
 .vscode/
 *.tgz
 test-output/
+
+# Tooling
+*.tsbuildinfo
+.vitest/
+
+# Internal assistant/editor folders
+.qwen/
+
+# Never ship template build caches
+templates/**/.gradle/
+templates/**/build/

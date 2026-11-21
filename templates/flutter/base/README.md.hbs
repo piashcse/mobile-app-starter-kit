@@ -1,0 +1,51 @@
+# {{appTitle}}
+
+Generated with [Mobile App Starter Kit](https://github.com/piashcse/mobile-app-starter-kit) using **Flutter**.
+
+## Getting started
+
+```bash
+flutter pub get
+flutter run
+```
+
+## Demo credentials
+
+- Email: `test@example.com`
+- Password: `password`
+
+## Included screens
+
+{{#each screens}}
+- {{name}}
+{{/each}}
+
+## Design system & localization
+
+- Shared design tokens: `design-tokens.json`
+- Light/dark theme with a persisted toggle
+- English + Spanish localization with a language switcher on Sign In
+- Add strings to the shared catalog in the CLI and regenerate to extend it
+
+## Architecture
+
+- **Clean Architecture** feature folders (`data`, `presentation`)
+- **Riverpod** state management
+- **GoRouter** navigation with typed routes
+- **Dio** API client with a mock interceptor
+- **Material 3** light/dark themes
+
+## Replacing the mock API
+
+Delete `lib/core/api/mock_interceptor.dart` and change `baseUrl` in
+`lib/core/api/api_client.dart` to point at your backend.
+
+## Useful commands
+
+| Command | Description |
+| --- | --- |
+| `flutter run` | Run on a connected device |
+| `flutter analyze` | Static analysis |
+| `flutter test` | Run tests |
+| `flutter build apk` | Build an Android APK |
+| `flutter build ios` | Build for iOS |

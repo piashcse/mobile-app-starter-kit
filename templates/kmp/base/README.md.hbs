@@ -1,0 +1,64 @@
+# {{appTitle}}
+
+Generated with [Mobile App Starter Kit](https://github.com/piashcse/mobile-app-starter-kit) using **Kotlin Multiplatform + Compose Multiplatform**.
+
+## Requirements
+
+- JDK 17 or newer
+- Android Studio (for Android)
+- Xcode 16+ and [XcodeGen](https://github.com/yonaskolb/XcodeGen) (for iOS)
+
+## Run Android
+
+```bash
+./gradlew :androidApp:assembleDebug
+# or open the project in Android Studio and run the `androidApp` configuration
+```
+
+## Run iOS
+
+```bash
+cd iosApp
+xcodegen generate
+open iosApp.xcodeproj
+```
+
+The `project.yml` builds the shared Kotlin framework automatically before Xcode
+compiles the Swift app.
+
+## Demo credentials
+
+- Email: `test@example.com`
+- Password: `password`
+
+## Included screens
+
+{{#each screens}}
+- {{name}}
+{{/each}}
+
+## Design system & localization
+
+- Shared design tokens: `design-tokens.json`
+- Light/dark theme with a persisted toggle
+- English + Spanish localization with a language switcher on Sign In
+- Add strings to the shared catalog in the CLI and regenerate to extend it
+
+## Architecture
+
+- **Compose Multiplatform** shared UI (`composeApp`)
+- **MVVM** with `StateFlow` ViewModels
+- **Navigation 3** with a user-owned back stack and `@Serializable` route keys
+- **Full localization** via Compose Multiplatform resources
+  (`composeResources/values*/strings.xml` + `stringResource`), including legal
+  content and a runtime language switcher
+- **Typed errors** (`AppError` / `ValidationReason`) with validation in ViewModels
+- **Change password** wired through a ViewModel and the API client
+- **Ktor** client (mock data client included)
+- **Manual DI** via `ViewModelProvider`
+
+## Replacing the mock API
+
+`composeApp/src/commonMain/kotlin/core/api/ApiClient.kt` returns mock data with
+simulated latency. Replace its methods with Ktor `HttpClient` calls and delete
+`MockData.kt`.

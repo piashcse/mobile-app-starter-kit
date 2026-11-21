@@ -1,31 +1,34 @@
 package core.api
 
-import kotlinx.serialization.json.Json
+import core.error.AppError
+import core.error.AppException
 
 /**
- * Mock API Client that returns hardcoded JSON responses
- * Replace with real Ktor HttpClient when connecting to a real API
+ * Mock API client. Replace these methods with Ktor calls when connecting a real
+ * backend. It returns typed errors and never contains user-facing copy.
  */
 class ApiClient {
-    private val json = Json { ignoreUnknownKeys = true }
-
     suspend fun login(email: String, password: String): Result<LoginResponse> {
         kotlinx.coroutines.delay(800)
         return if (email == "test@example.com" && password == "password") {
             Result.success(MockData.loginSuccess)
         } else {
-            Result.failure(Exception("Invalid email or password"))
+            Result.failure(AppException(AppError.InvalidCredentials))
         }
     }
 
-    suspend fun register(name: String, email: String, password: String): Result<String> {
+    suspend fun register(
+        name: String,
+        email: String,
+        password: String,
+    ): Result<Unit> {
         kotlinx.coroutines.delay(800)
-        return Result.success("Account created successfully!")
+        return Result.success(Unit)
     }
 
-    suspend fun forgotPassword(email: String): Result<String> {
+    suspend fun forgotPassword(email: String): Result<Unit> {
         kotlinx.coroutines.delay(800)
-        return Result.success("Reset link sent to your email")
+        return Result.success(Unit)
     }
 
     suspend fun getProfile(): Result<UserProfile> {
@@ -43,8 +46,11 @@ class ApiClient {
         return Result.success(MockData.notifications)
     }
 
-    suspend fun changePassword(current: String, newPass: String): Result<String> {
+    suspend fun changePassword(
+        current: String,
+        newPass: String,
+    ): Result<Unit> {
         kotlinx.coroutines.delay(800)
-        return Result.success("Password changed successfully")
+        return Result.success(Unit)
     }
 }

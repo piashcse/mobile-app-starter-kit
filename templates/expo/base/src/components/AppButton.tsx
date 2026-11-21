@@ -2,13 +2,14 @@ import React from 'react';
 import {
   TouchableOpacity,
   Text,
-  StyleSheet,
   ActivityIndicator,
+  StyleProp,
   ViewStyle,
   TextStyle,
+  StyleSheet,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors } from '../theme/colors';
+import { makeStyles, useAppTheme } from '../theme';
 import { typography } from '../theme/typography';
 import { borderRadius, spacing } from '../theme/spacing';
 
@@ -19,8 +20,8 @@ interface AppButtonProps {
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   disabled?: boolean;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   icon?: React.ReactNode;
 }
 
@@ -35,6 +36,8 @@ export const AppButton: React.FC<AppButtonProps> = ({
   textStyle,
   icon,
 }) => {
+  const styles = useStyles();
+  const { colors } = useAppTheme();
   const isDisabled = disabled || loading;
 
   const sizeStyles = {
@@ -62,7 +65,9 @@ export const AppButton: React.FC<AppButtonProps> = ({
           ) : (
             <>
               {icon}
-              <Text style={[styles.primaryText, textStyle]}>{title}</Text>
+              <Text style={[styles.primaryText, styles.gradientText, textStyle]}>
+                {title}
+              </Text>
             </>
           )}
         </LinearGradient>
@@ -71,17 +76,13 @@ export const AppButton: React.FC<AppButtonProps> = ({
   }
 
   const variantStyles: Record<string, ViewStyle> = {
-    secondary: {
-      backgroundColor: colors.surface,
-    },
+    secondary: { backgroundColor: colors.surface },
     outline: {
       backgroundColor: 'transparent',
       borderWidth: 1.5,
       borderColor: colors.primary,
     },
-    ghost: {
-      backgroundColor: 'transparent',
-    },
+    ghost: { backgroundColor: 'transparent' },
   };
 
   const variantTextStyles: Record<string, TextStyle> = {
@@ -117,7 +118,7 @@ export const AppButton: React.FC<AppButtonProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles(() => StyleSheet.create({
   base: {
     borderRadius: borderRadius.md,
     flexDirection: 'row',
@@ -133,14 +134,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     gap: spacing.sm,
   },
-  disabled: {
-    opacity: 0.5,
-  },
-  primaryText: {
-    ...typography.button,
-    color: colors.textPrimary,
-  },
-  text: {
-    ...typography.button,
-  },
-});
+  disabled: { opacity: 0.5 },
+  primaryText: { ...typography.button },
+  gradientText: { color: '#FFFFFF' },
+  text: { ...typography.button },
+}));

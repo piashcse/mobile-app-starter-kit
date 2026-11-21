@@ -1,0 +1,102 @@
+package features.profile.view
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import app.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
+import core.components.AppButton
+import core.components.AppCard
+import core.components.AppGhostButton
+import core.error.localized
+import core.theme.AppSizes
+import core.theme.AppSpacing
+import core.viewmodel.UiState
+import features.profile.viewmodel.ProfileViewModel
+import di.ViewModelProvider
+
+@Composable
+fun ProfileScreen(
+    onSignOut: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
+) {
+    val viewModel = remember { ViewModelProvider.profileViewModel() }
+    DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
+    val state by viewModel.state.collectAsState()
+    
+    when (val s = state) {
+        is UiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+        }
+        is UiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                s.error.localized(),
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        is UiState.Success -> {
+            val profile = s.data
+            Column(
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(AppSizes.screenPadding),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                // Avatar placeholder
+                Surface(
+                    modifier = Modifier.size(100.dp).clip(CircleShape),
+                    color = MaterialTheme.colorScheme.primary,
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(profile.name.take(2).uppercase(), style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+                    }
+                }
+                Spacer(Modifier.height(16.dp))
+                Text(profile.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
+                Text(profile.email, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                profile.bio?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+
+                Spacer(Modifier.height(24.dp))
+                AppCard {
+                    InfoRow("📧", stringResource(Res.string.common_email), profile.email)
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    InfoRow("📱", stringResource(Res.string.common_phone), profile.phone ?: stringResource(Res.string.common_not_set))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    InfoRow("📍", stringResource(Res.string.common_location), profile.location ?: stringResource(Res.string.common_not_set))
+                }
+
+                Spacer(Modifier.height(16.dp))
+                AppButton(text = stringResource(Res.string.common_edit_profile), onClick = {}, isOutlined = true)
+{{#if hasSettings}}
+                Spacer(Modifier.height(8.dp))
+                AppButton(text = stringResource(Res.string.common_settings), onClick = onNavigateToSettings, isOutlined = true)
+{{/if}}
+{{#if hasSignIn}}
+                Spacer(Modifier.height(8.dp))
+                AppGhostButton(text = stringResource(Res.string.common_sign_out), onClick = onSignOut)
+{{/if}}
+            }
+        }
+        else -> {}
+    }
+}
+
+@Composable
+private fun InfoRow(icon: String, label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(icon, style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onBackground)
+        }
+    }
+}

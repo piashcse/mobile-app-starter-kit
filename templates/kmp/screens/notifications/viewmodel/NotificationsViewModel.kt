@@ -2,6 +2,7 @@ package features.notifications.viewmodel
 
 import core.api.ApiClient
 import core.api.NotificationItem
+import core.error.toAppError
 import core.viewmodel.BaseViewModel
 import core.viewmodel.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,7 @@ class NotificationsViewModel(private val apiClient: ApiClient) : BaseViewModel()
         viewModelScope.launch {
             apiClient.getNotifications()
                 .onSuccess { _state.value = UiState.Success(it) }
-                .onFailure { _state.value = UiState.Error(it.message ?: "Failed") }
+                .onFailure { error -> _state.value = UiState.Error(error.toAppError()) }
         }
     }
 }

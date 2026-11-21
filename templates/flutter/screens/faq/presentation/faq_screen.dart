@@ -25,7 +25,7 @@ class _FaqScreenState extends State<FaqScreen> {
             duration: const Duration(milliseconds: 300),
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: isExpanded ? AppColors.primary : AppColors.border),
             ),

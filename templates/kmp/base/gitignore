@@ -1,0 +1,31 @@
+# Gradle
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Android
+local.properties
+*.apk
+*.aab
+*.keystore
+!debug.keystore
+captures/
+
+# iOS / Xcode
+iosApp/*.xcodeproj
+iosApp/*.xcworkspace
+DerivedData/
+*.xcuserstate
+xcuserdata/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Kotlin
+.kotlin/

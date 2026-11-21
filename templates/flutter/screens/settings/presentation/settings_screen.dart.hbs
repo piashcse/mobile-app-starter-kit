@@ -1,0 +1,97 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+{{#if hasAccountLinks}}
+import 'package:go_router/go_router.dart';
+{{/if}}
+import '../../../core/theme/theme_mode_provider.dart';
+
+class SettingsScreen extends ConsumerStatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  bool _notifications = true;
+  bool _biometrics = false;
+  bool _analytics = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Settings')),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          _sectionTitle('Preferences'),
+          _toggleTile('Push Notifications', '🔔', _notifications,
+              (v) => setState(() => _notifications = v)),
+          _toggleTile('Dark Mode', '🌙', isDark, (_) {
+            ref.read(themeModeProvider.notifier).toggle();
+          }),
+          _toggleTile('Biometric Login', '🔒', _biometrics,
+              (v) => setState(() => _biometrics = v)),
+          _toggleTile('Usage Analytics', '📊', _analytics,
+              (v) => setState(() => _analytics = v)),
+          const SizedBox(height: 24),
+          _sectionTitle('Account'),
+{{#if hasChangePassword}}
+          _navTile('Change Password', '🔑', () => context.push('/change-password')),
+{{/if}}
+{{#if hasPrivacyPolicy}}
+          _navTile('Privacy Policy', '🛡️', () => context.push('/privacy-policy')),
+{{/if}}
+{{#if hasTerms}}
+          _navTile('Terms of Service', '📄', () => context.push('/terms')),
+{{/if}}
+{{#if hasFaq}}
+          _navTile('FAQ', '❓', () => context.push('/faq')),
+{{/if}}
+{{#if hasAbout}}
+          _navTile('About', 'ℹ️', () => context.push('/about')),
+{{/if}}
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) => Padding(
+        padding: const EdgeInsets.only(bottom: 8, left: 4),
+        child: Text(
+          title,
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(letterSpacing: 1, fontWeight: FontWeight.w600),
+        ),
+      );
+
+  Widget _toggleTile(String title, String icon, bool value,
+          ValueChanged<bool> onChanged) =>
+      ListTile(
+        leading: Text(icon, style: const TextStyle(fontSize: 20)),
+        title: Text(title),
+        trailing: Switch(
+          value: value,
+          onChanged: onChanged,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      );
+
+{{#if hasAccountLinks}}
+  Widget _navTile(String title, String icon, VoidCallback onTap) => ListTile(
+        leading: Text(icon, style: const TextStyle(fontSize: 20)),
+        title: Text(title),
+        trailing: Icon(
+          Icons.chevron_right,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      );
+{{/if}}
+}

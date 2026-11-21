@@ -1,5 +1,9 @@
 package core.api
 
+/**
+ * Simulated backend payloads. UI copy lives in the shared string catalog;
+ * FAQ/notification content is treated as server-owned data.
+ */
 object MockData {
     val loginSuccess = LoginResponse(
         token = "mock-jwt-token",
@@ -30,23 +34,4 @@ object MockData {
         NotificationItem(2, "Profile Updated", "Your profile was updated.", true, "2025-03-27T14:30:00Z", "success"),
         NotificationItem(3, "Security Alert", "New device signed in.", false, "2025-03-26T09:15:00Z", "warning")
     )
-
-    val privacyPolicy = """
-        # Privacy Policy
-        
-        Last Updated: March 2025
-        
-        We collect information you provide directly. We use industry-standard encryption to protect your data.
-        You have the right to access, correct, delete, and export your data.
-        Contact: privacy@example.com
-    """.trimIndent()
-
-    val terms = """
-        # Terms of Service
-        
-        Last Updated: March 2025
-        
-        By using our app, you agree to these terms. You are responsible for your account credentials.
-        Contact: legal@example.com
-    """.trimIndent()
 }

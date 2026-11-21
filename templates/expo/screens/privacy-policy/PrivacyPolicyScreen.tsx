@@ -1,10 +1,11 @@
 import React from 'react';
 import { ScrollView, Text, StyleSheet } from 'react-native';
 import { ScreenWrapper } from '../../components';
-import { colors, typography, spacing } from '../../theme';
+import { makeStyles, typography, spacing } from '../../theme';
 import { mockData } from '../../api/mockData';
 
 export default function PrivacyPolicyScreen() {
+  const styles = useStyles();
   return (
     <ScreenWrapper>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -14,7 +15,7 @@ export default function PrivacyPolicyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => StyleSheet.create({
   scrollContent: {
     padding: spacing.lg,
     paddingBottom: spacing.xxl,
@@ -24,4 +25,4 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 24,
   },
-});
+}));

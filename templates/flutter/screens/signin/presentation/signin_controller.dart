@@ -21,15 +21,14 @@ class SignInState {
   }
 }
 
-class SignInController extends StateNotifier<SignInState> {
-  final SignInRepository _repository;
-
-  SignInController(this._repository) : super(const SignInState());
+class SignInController extends Notifier<SignInState> {
+  @override
+  SignInState build() => const SignInState();
 
   Future<bool> signIn(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _repository.signIn(email, password);
+      await ref.read(signInRepositoryProvider).signIn(email, password);
       state = state.copyWith(isLoading: false, isAuthenticated: true);
       return true;
     } catch (e) {
@@ -40,6 +39,4 @@ class SignInController extends StateNotifier<SignInState> {
 }
 
 final signInControllerProvider =
-    StateNotifierProvider<SignInController, SignInState>(
-  (ref) => SignInController(ref.read(signInRepositoryProvider)),
-);
+    NotifierProvider<SignInController, SignInState>(SignInController.new);

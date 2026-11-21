@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { colors } from '../theme/colors';
+import { View, StyleProp, ViewStyle, StyleSheet } from 'react-native';
+import { makeStyles, useAppTheme } from '../theme';
 import { borderRadius, spacing } from '../theme/spacing';
 
 interface AppCardProps {
   children: React.ReactNode;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   variant?: 'default' | 'elevated' | 'outlined';
 }
 
@@ -14,21 +14,17 @@ export const AppCard: React.FC<AppCardProps> = ({
   style,
   variant = 'default',
 }) => {
+  const styles = useStyles();
   return (
-    <View style={[styles.base, variantStyles[variant], style]}>
-      {children}
-    </View>
+    <View style={[styles.base, styles[variant], style]}>{children}</View>
   );
 };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => StyleSheet.create({
   base: {
     borderRadius: borderRadius.lg,
     padding: spacing.md,
   },
-});
-
-const variantStyles = StyleSheet.create({
   default: {
     backgroundColor: colors.surface,
   },
@@ -36,7 +32,7 @@ const variantStyles = StyleSheet.create({
     backgroundColor: colors.surface,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -45,4 +41,4 @@ const variantStyles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
   },
-});
+}));
