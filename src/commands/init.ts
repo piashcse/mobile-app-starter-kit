@@ -207,8 +207,8 @@ function resolveConfig(options: InitOptions): ProjectConfig {
   return { name, framework, screens: valid, packageName, outputDir };
 }
 
-async function promptUser(options: InitOptions): Promise<ProjectConfig> {
-  const answers = await inquirer.prompt([
+export function buildInitPrompts(options: InitOptions) {
+  return [
     {
       type: 'input',
       name: 'name',
@@ -220,7 +220,7 @@ async function promptUser(options: InitOptions): Promise<ProjectConfig> {
       when: !options.name || !validateProjectName(options.name),
     },
     {
-      type: 'list',
+      type: 'select',
       name: 'framework',
       message: 'Framework:',
       choices: FRAMEWORKS.map((f) => ({
@@ -255,7 +255,11 @@ async function promptUser(options: InitOptions): Promise<ProjectConfig> {
         validatePackageName(input) || 'Must be like com.example.myapp',
       when: !options.packageName || !validatePackageName(options.packageName),
     },
-  ]);
+  ];
+}
+
+async function promptUser(options: InitOptions): Promise<ProjectConfig> {
+  const answers = await inquirer.prompt(buildInitPrompts(options));
 
   const name = (
     options.name && validateProjectName(options.name)

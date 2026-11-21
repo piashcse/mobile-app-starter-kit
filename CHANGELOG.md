@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented here.
 
+## 2.0.1 — 2026-11-21
+
+### Fixed
+
+- The interactive `init` flow now uses Inquirer 14's `select` prompt type.
+  Inquirer 14 removed `list`, which caused the framework picker to crash with
+  `Prompt type "list" is not registered`.
+
 ## 2.0.0 — 2026-11-21
 
 First release since `1.0.2`. This release makes every generated template
