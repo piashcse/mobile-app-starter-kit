@@ -47,17 +47,14 @@ export async function generateExpoProject(
 
   // Step 3: Generate dynamic route files in app/ directory
   logger.step(3, 4, 'Generating routes...');
-  await generateExpoRoutes(config, context);
+  await generateExpoRoutes(config);
 
   // Step 4: Generate API slice with selected endpoints
   logger.step(4, 4, 'Setting up RTK Query API...');
   await generateRtkApiSlice(config);
 }
 
-async function generateExpoRoutes(
-  config: ProjectConfig,
-  context: Record<string, unknown>
-): Promise<void> {
+async function generateExpoRoutes(config: ProjectConfig): Promise<void> {
   const appDir = path.join(config.outputDir, 'app');
   await fs.ensureDir(appDir);
 
@@ -233,9 +230,6 @@ export default function ${cases.pascal}Route() {
       routeContent
     );
   }
-
-  // Keep generated files from referencing screens that were not selected.
-  void context;
 }
 
 async function generateRtkApiSlice(config: ProjectConfig): Promise<void> {
@@ -319,7 +313,22 @@ async function generateRtkApiSlice(config: ProjectConfig): Promise<void> {
     })`);
   }
 
-  const types: string[] = ['MessageResponse'];
+  const usesMockData = config.screens.some((screen) =>
+    [
+      'signin',
+      'signup',
+      'forgot-password',
+      'profile',
+      'faq',
+      'notifications',
+    ].includes(screen)
+  );
+  const usesMessageResponse = config.screens.some((screen) =>
+    ['signup', 'forgot-password', 'profile', 'change-password'].includes(screen)
+  );
+
+  const types: string[] = [];
+  if (usesMessageResponse) types.push('MessageResponse');
   if (config.screens.includes('signin'))
     types.push('LoginRequest', 'LoginResponse');
   if (config.screens.includes('signup')) types.push('RegisterRequest');
@@ -346,24 +355,39 @@ async function generateRtkApiSlice(config: ProjectConfig): Promise<void> {
   if (config.screens.includes('profile')) tags.push("'Profile'");
   if (config.screens.includes('notifications')) tags.push("'Notifications'");
 
-  const apiSlice = `import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
-import { mockData } from './mockData';
-import type { ${types.join(', ')} } from './types';
+  const hasEndpoints = endpoints.length > 0;
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+  const imports = [
+    "import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';",
+    usesMockData ? "import { mockData } from './mockData';" : null,
+    types.length > 0
+      ? `import type { ${types.join(', ')} } from './types';`
+      : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
 
-export const api = createApi({
+  const delayDeclaration = hasEndpoints
+    ? 'const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));\n\n'
+    : '';
+
+  const endpointsBlock = hasEndpoints
+    ? `(builder) => ({\n${endpoints.join(',\n\n')},\n  })`
+    : '() => ({})';
+
+  const hooksExport =
+    hooks.length > 0
+      ? `\n\nexport const {\n  ${hooks.join(',\n  ')},\n} = api;`
+      : '';
+
+  const apiSlice = `${imports}
+
+${delayDeclaration}export const api = createApi({
   reducerPath: 'api',
   baseQuery: fakeBaseQuery(),
   tagTypes: [${tags.join(', ')}],
-  endpoints: (builder) => ({
-${endpoints.join(',\n\n')},
-  }),
-});
-
-export const {
-  ${hooks.join(',\n  ')},
-} = api;
+  endpoints: ${endpointsBlock},
+});${hooksExport}
 `;
 
   await fs.writeFile(path.join(apiDir, 'apiSlice.ts'), apiSlice);

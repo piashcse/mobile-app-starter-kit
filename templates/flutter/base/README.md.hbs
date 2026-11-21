@@ -24,12 +24,12 @@ flutter run
 
 - Shared design tokens: `design-tokens.json`
 - Light/dark theme with a persisted toggle
-- English + Spanish localization with a language switcher on Sign In
+- English + Spanish localization foundation with a Sign In reference slice
 - Add strings to the shared catalog in the CLI and regenerate to extend it
 
 ## Architecture
 
-- **Clean Architecture** feature folders (`data`, `presentation`)
+- **Feature-first layers** (`data`, `presentation`)
 - **Riverpod** state management
 - **GoRouter** navigation with typed routes
 - **Dio** API client with a mock interceptor
@@ -37,8 +37,15 @@ flutter run
 
 ## Replacing the mock API
 
-Delete `lib/core/api/mock_interceptor.dart` and change `baseUrl` in
-`lib/core/api/api_client.dart` to point at your backend.
+Set `USE_MOCK_API=false` and `API_BASE_URL` at build time:
+
+```bash
+flutter run \
+  --dart-define=USE_MOCK_API=false \
+  --dart-define=API_BASE_URL=https://api.yourdomain.com
+```
+
+The mock interceptor lives in `lib/core/api/mock_interceptor.dart`.
 
 ## Useful commands
 

@@ -12,7 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+{{#if hasSettings}}
 import core.components.AppButton
+{{/if}}
 import core.components.AppCard
 import core.components.AppGhostButton
 import core.error.localized
@@ -74,7 +76,6 @@ fun ProfileScreen(
                 }
 
                 Spacer(Modifier.height(16.dp))
-                AppButton(text = stringResource(Res.string.common_edit_profile), onClick = {}, isOutlined = true)
 {{#if hasSettings}}
                 Spacer(Modifier.height(8.dp))
                 AppButton(text = stringResource(Res.string.common_settings), onClick = onNavigateToSettings, isOutlined = true)

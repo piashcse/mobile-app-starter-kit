@@ -8,7 +8,6 @@ import {
   SCREENS,
 } from './config.js';
 import { deriveProjectNames, screenIdToCases, toKebab } from './utils/file.js';
-import { logger } from './utils/logger.js';
 import { generateExpoProject } from './frameworks/expo.js';
 import { generateFlutterProject } from './frameworks/flutter.js';
 import { generateKmpProject } from './frameworks/kmp.js';

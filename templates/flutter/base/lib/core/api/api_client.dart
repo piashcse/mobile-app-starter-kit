@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../config/app_config.dart';
 import 'mock_interceptor.dart';
 
 class ApiClient {
@@ -7,7 +8,7 @@ class ApiClient {
   ApiClient() {
     dio = Dio(
       BaseOptions(
-        baseUrl: 'https://api.example.com',
+        baseUrl: AppConfig.apiBaseUrl,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 10),
         headers: {
@@ -17,12 +18,12 @@ class ApiClient {
       ),
     );
 
-    // Use mock interceptor for development
-    dio.interceptors.add(MockInterceptor());
-    dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-    ));
+    if (AppConfig.useMockApi) {
+      dio.interceptors.add(MockInterceptor());
+    }
+    dio.interceptors.add(
+      LogInterceptor(requestBody: true, responseBody: true),
+    );
   }
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) {

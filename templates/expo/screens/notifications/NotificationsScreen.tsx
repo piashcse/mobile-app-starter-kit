@@ -1,7 +1,6 @@
-import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { ScreenWrapper, AppCard, LoadingSpinner } from '../../components';
-import { makeStyles, useAppTheme, typography, spacing, borderRadius } from '../../theme';
+import { makeStyles, useAppTheme, typography, spacing } from '../../theme';
 import { useGetNotificationsQuery } from '../../api/apiSlice';
 
 export default function NotificationsScreen() {

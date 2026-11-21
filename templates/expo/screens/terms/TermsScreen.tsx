@@ -1,4 +1,3 @@
-import React from 'react';
 import { ScrollView, Text, StyleSheet } from 'react-native';
 import { ScreenWrapper } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';

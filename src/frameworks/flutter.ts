@@ -30,7 +30,7 @@ export async function generateFlutterProject(
   await copyTemplateDir(baseDir, config.outputDir, context);
   await writeFlutterDesign(config.outputDir);
 
-  // Step 3: Copy selected screen features (Clean Architecture)
+  // Step 3: Copy selected screen features (feature-first layers)
   logger.step(3, 5, 'Adding selected features...');
   for (const screenId of config.screens) {
     const screenSrcDir = path.join(screensDir, screenId);

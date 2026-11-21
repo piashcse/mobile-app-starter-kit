@@ -10,25 +10,37 @@ const webStorage =
 
 export const storage = {
   async get(key: string): Promise<string | null> {
-    if (Platform.OS === 'web') {
-      return webStorage?.getItem(key) ?? null;
+    try {
+      if (Platform.OS === 'web') {
+        return webStorage?.getItem(key) ?? null;
+      }
+      return await SecureStore.getItemAsync(key);
+    } catch {
+      return null;
     }
-    return SecureStore.getItemAsync(key);
   },
 
   async set(key: string, value: string): Promise<void> {
-    if (Platform.OS === 'web') {
-      webStorage?.setItem(key, value);
-      return;
+    try {
+      if (Platform.OS === 'web') {
+        webStorage?.setItem(key, value);
+        return;
+      }
+      await SecureStore.setItemAsync(key, value);
+    } catch {
+      // Persistence is best-effort; the in-memory state still works.
     }
-    await SecureStore.setItemAsync(key, value);
   },
 
   async remove(key: string): Promise<void> {
-    if (Platform.OS === 'web') {
-      webStorage?.removeItem(key);
-      return;
+    try {
+      if (Platform.OS === 'web') {
+        webStorage?.removeItem(key);
+        return;
+      }
+      await SecureStore.deleteItemAsync(key);
+    } catch {
+      // Ignore storage failures.
     }
-    await SecureStore.deleteItemAsync(key);
   },
 };

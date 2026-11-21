@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleProp, ViewStyle, StyleSheet } from 'react-native';
-import { makeStyles, useAppTheme } from '../theme';
+import { makeStyles } from '../theme';
 import { borderRadius, spacing } from '../theme/spacing';
 
 interface AppCardProps {

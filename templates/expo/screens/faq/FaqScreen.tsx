@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { ScreenWrapper, LoadingSpinner } from '../../components';
 import { makeStyles, typography, spacing, borderRadius } from '../../theme';

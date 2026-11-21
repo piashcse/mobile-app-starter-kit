@@ -24,7 +24,7 @@ Setting up a mobile architecture that scales is time-consuming: navigation, stat
 - 🧩 **Selectable screens** — include only the screens you need.
 - 🎨 **Light/dark themes** — system-aware themes with a working in-app toggle.
 - 🔐 **Persisted auth** — secure session restore on launch.
-- 🏗️ **Best-practice architecture** — Expo Router + RTK Query, Flutter Clean Architecture + Riverpod, Compose Multiplatform + MVVM.
+- 🏗️ **Best-practice architecture** — Expo Router + RTK Query, Flutter feature-first architecture + Riverpod, Compose Multiplatform + MVVM.
 - 🎭 **Mock API built in** — email/password demo auth with simulated latency.
 - 🛠️ **Verified templates** — CI type-checks Expo, analyzes Flutter, and builds the KMP Android app.
 - 📦 **Runnable output** — `.gitignore`, README, assets, native projects, and a Gradle wrapper included.
@@ -266,7 +266,7 @@ Every pull request:
 
 1. Builds the TypeScript CLI and runs unit + generation tests.
 2. Generates a project for each framework.
-3. Runs `tsc --noEmit` and `expo prebuild` for Expo.
+3. Runs `tsc --noEmit`, ESLint, and `expo prebuild` for Expo.
 4. Runs `flutter pub get` and `flutter analyze` for Flutter.
 5. Runs `./gradlew :androidApp:assembleDebug` for KMP.
 

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppButton, AppInput } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
 import { useRegisterMutation } from '../../api/apiSlice';
+import { getErrorMessage } from '../../utils/errors';
 
 export default function SignUpScreen() {
   const styles = useStyles();
@@ -35,8 +36,8 @@ export default function SignUpScreen() {
       Alert.alert('Success', result.message, [
         { text: 'Sign In', onPress: () => router.back() },
       ]);
-    } catch (err: any) {
-      Alert.alert('Error', err?.data?.message || 'Registration failed');
+    } catch (error: unknown) {
+      Alert.alert('Error', getErrorMessage(error, 'Registration failed'));
     }
   };
 

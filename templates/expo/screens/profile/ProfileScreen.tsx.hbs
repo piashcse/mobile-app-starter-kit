@@ -1,6 +1,7 @@
-import React from 'react';
 import { View, Text, ScrollView, Image, StyleSheet } from 'react-native';
+{{#if hasProfileLinks}}
 import { useRouter } from 'expo-router';
+{{/if}}
 import { ScreenWrapper, AppButton, AppCard, LoadingSpinner } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
 import { useGetProfileQuery } from '../../api/apiSlice';
@@ -8,7 +9,9 @@ import { useAuthStore } from '../../store/authStore';
 
 export default function ProfileScreen() {
   const styles = useStyles();
+{{#if hasProfileLinks}}
   const router = useRouter();
+{{/if}}
   const { data: profile, isLoading } = useGetProfileQuery();
   const logout = useAuthStore((state) => state.logout);
   const avatarSource = { uri: profile?.avatar || 'https://i.pravatar.cc/150?img=68' };
@@ -44,11 +47,6 @@ export default function ProfileScreen() {
         </AppCard>
 
         <View style={styles.actions}>
-          <AppButton
-            title="Edit Profile"
-            onPress={() => {}}
-            variant="secondary"
-          />
 {{#if hasSettings}}
           <AppButton
             title="Settings"

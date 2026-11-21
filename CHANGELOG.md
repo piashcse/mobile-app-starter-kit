@@ -41,6 +41,15 @@ Expo, Flutter, and KMP starters.
 - Non-interactive and DX flags: `--yes`, `--force`, `--no-install`, `--no-git`,
   `--dry-run`, `--verbose`.
 - Generation tests and generated-project assertions (`vitest`).
+- Generated unit tests: Flutter localization tests and KMP validator tests.
+- Expo projects include ESLint (`npm run lint`) and strict unused checks.
+- Flutter uses a typed `UserProfile` model, a shared `apiClientProvider`, and
+  `--dart-define` configuration (`USE_MOCK_API`, `API_BASE_URL`).
+- Removed non-functional profile actions and replaced empty Flutter catch
+  blocks with validated submissions and visible errors.
+- Split large CLI generators into focused modules for maintainability.
+- Strict TypeScript checks (`noUnusedLocals`, `noUnusedParameters`,
+  `noImplicitReturns`) and a root `.editorconfig`.
 - SECURITY.md, CODE_OF_CONDUCT.md, issue/PR templates, Dependabot, and an npm
   publish workflow with provenance.
 

@@ -154,16 +154,26 @@ export function doctorCommand(): void {
   logger.blank();
   logger.info(`ANDROID_HOME: ${ANDROID_HOME ?? chalk.gray('not set')}`);
 
-  const sdkPlatforms = ANDROID_HOME
-    ? path.join(ANDROID_HOME, 'platforms')
-    : null;
-  logger.info(
-    `Android platform: ${
-      sdkPlatforms
-        ? chalk.gray(
-            'run `sdkmanager --list` to verify android-36 is installed'
-          )
-        : chalk.gray('not detected')
-    }`
-  );
+  if (!ANDROID_HOME) return;
+
+  try {
+    const platforms = fs
+      .readdirSync(path.join(ANDROID_HOME, 'platforms'))
+      .filter((entry) => entry.startsWith('android-'))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    logger.info(
+      `Android platforms: ${
+        platforms.length > 0
+          ? chalk.gray(platforms.join(', '))
+          : chalk.gray('none installed')
+      }`
+    );
+    if (platforms.length > 0 && !platforms.includes('android-36')) {
+      logger.warn(
+        'android-36 is not installed; KMP and Expo native builds may fail.'
+      );
+    }
+  } catch {
+    logger.info('Android platforms: not detected');
+  }
 }

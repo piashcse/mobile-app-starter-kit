@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 {{#if hasAuthLinks}}
 import { useRouter } from 'expo-router';
@@ -13,6 +13,7 @@ import { makeStyles, typography, spacing, borderRadius } from '../../theme';
 import { useTranslation } from '../../i18n';
 import { useLoginMutation } from '../../api/apiSlice';
 import { useAuthStore } from '../../store/authStore';
+import { getErrorMessage } from '../../utils/errors';
 
 export default function SignInScreen() {
   const styles = useStyles();
@@ -48,9 +49,9 @@ export default function SignInScreen() {
 {{#if canNavigateAfterAuth}}
       router.replace('{{postAuthRoute}}');
 {{/if}}
-    } catch (err: any) {
+    } catch (error: unknown) {
       setErrors({
-        email: err?.data?.message || t('auth.signIn.error.invalidCredentials'),
+        email: getErrorMessage(error, t('auth.signIn.error.invalidCredentials')),
       });
     }
   };

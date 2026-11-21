@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppButton, AppInput } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
 import { useForgotPasswordMutation } from '../../api/apiSlice';
+import { getErrorMessage } from '../../utils/errors';
 
 export default function ForgotPasswordScreen() {
   const styles = useStyles();
@@ -29,8 +30,11 @@ export default function ForgotPasswordScreen() {
       Alert.alert('Success', result.message, [
         { text: 'Back to Sign In', onPress: () => router.back() },
       ]);
-    } catch (err: any) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } catch (error: unknown) {
+      Alert.alert(
+        'Error',
+        getErrorMessage(error, 'Something went wrong. Please try again.')
+      );
     }
   };
 
@@ -41,7 +45,7 @@ export default function ForgotPasswordScreen() {
           <Text style={styles.emoji}>🔐</Text>
           <Text style={styles.title}>Forgot Password?</Text>
           <Text style={styles.subtitle}>
-            No worries! Enter your email and we'll send you a reset link.
+            No worries! Enter your email and we&apos;ll send you a reset link.
           </Text>
         </View>
 

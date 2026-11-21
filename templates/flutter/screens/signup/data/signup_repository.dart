@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
+import '../../../core/api/api_client_provider.dart';
 
 class SignUpRepository {
   final ApiClient _apiClient;
@@ -11,4 +12,4 @@ class SignUpRepository {
   }
 }
 
-final signUpRepositoryProvider = Provider<SignUpRepository>((ref) => SignUpRepository(ApiClient()));
+final signUpRepositoryProvider = Provider<SignUpRepository>((ref) => SignUpRepository(ref.read(apiClientProvider)));

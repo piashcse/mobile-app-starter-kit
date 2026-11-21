@@ -78,6 +78,13 @@ export async function addCommand(options: AddOptions): Promise<void> {
   if (invalid.length > 0) {
     logger.warn(`Unknown screens ignored: ${invalid.join(', ')}`);
   }
+  if (valid.length === 0) {
+    fail(
+      `No valid screens selected. Available: ${available
+        .map((screen) => screen.id)
+        .join(', ')}`
+    );
+  }
 
   const toAdd = valid.filter((id) => !existing.has(id));
   if (toAdd.length === 0) {

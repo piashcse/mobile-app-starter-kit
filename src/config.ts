@@ -32,7 +32,8 @@ export const FRAMEWORKS: {
   {
     id: 'flutter',
     name: 'Flutter',
-    description: 'Flutter with Clean Architecture, Riverpod, GoRouter, and Dio',
+    description:
+      'Flutter with feature-first architecture, Riverpod, GoRouter, and Dio',
   },
   {
     id: 'kmp',

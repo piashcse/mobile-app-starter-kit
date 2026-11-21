@@ -257,6 +257,11 @@ describe('generated projects', () => {
         path.join(dir, 'lib', 'core', 'l10n', 'language_switcher.dart')
       )
     ).toBe(true);
+    expect(
+      await fs.pathExists(
+        path.join(dir, 'test', 'core', 'l10n', 'app_localizations_test.dart')
+      )
+    ).toBe(true);
   });
 
   it('generates a valid KMP project', async () => {
@@ -464,6 +469,20 @@ describe('generated projects', () => {
           'core',
           'validation',
           'Validators.kt'
+        )
+      )
+    ).toBe(true);
+    expect(
+      await fs.pathExists(
+        path.join(
+          dir,
+          'composeApp',
+          'src',
+          'commonTest',
+          'kotlin',
+          'core',
+          'validation',
+          'ValidatorsTest.kt'
         )
       )
     ).toBe(true);
