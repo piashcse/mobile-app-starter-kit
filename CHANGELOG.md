@@ -45,6 +45,9 @@ Expo, Flutter, and KMP starters.
 - Expo projects include ESLint (`npm run lint`) and strict unused checks.
 - Flutter uses a typed `UserProfile` model, a shared `apiClientProvider`, and
   `--dart-define` configuration (`USE_MOCK_API`, `API_BASE_URL`).
+- Flutter generation is version-aware: Flutter 3.47+ projects use the
+  standalone `material_ui`/`cupertino_ui` libraries and decoupled
+  localizations; older SDKs keep the in-framework imports.
 - Removed non-functional profile actions and replaced empty Flutter catch
   blocks with validated submissions and visible errors.
 - Split large CLI generators into focused modules for maintainability.

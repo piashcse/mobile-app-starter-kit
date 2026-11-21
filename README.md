@@ -51,6 +51,10 @@ npx mobile-app-starter-kit init \
 
 > **Requirements:** Node.js **22.13+**. Flutter, JDK 17+, and Xcode are only required for the framework you generate.
 
+> **Flutter design libraries:** on Flutter 3.47+ the generator emits the standalone
+> `material_ui` package and decoupled localizations. Older SDKs keep
+> `package:flutter/material.dart` imports.
+
 Check your machine first:
 
 ```bash
