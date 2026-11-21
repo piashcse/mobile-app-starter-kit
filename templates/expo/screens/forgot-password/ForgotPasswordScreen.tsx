@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ScreenWrapper, AppButton, AppInput } from '../../components';
-import { makeStyles, typography, spacing } from '../../theme';
+import { AuthScreen, AppButton, AppInput } from '../../components';
 import { useForgotPasswordMutation } from './api';
 import { getErrorMessage } from '../../utils/errors';
 import { useTranslation } from '../../i18n';
 import { isEmail } from '../../utils/validation';
 
 export default function ForgotPasswordScreen() {
-  const styles = useStyles();
   const { t } = useTranslation();
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -42,60 +40,33 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <ScreenWrapper>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.emoji}>🔐</Text>
-          <Text style={styles.title}>{t('auth.forgot.title')}</Text>
-          <Text style={styles.subtitle}>{t('auth.forgot.subtitle')}</Text>
-        </View>
+    <AuthScreen
+      emoji="🔐"
+      title={t('auth.forgot.title')}
+      subtitle={t('auth.forgot.subtitle')}
+    >
+      <AppInput
+        label={t('auth.signIn.emailLabel')}
+        placeholder={t('auth.signIn.emailPlaceholder')}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        error={error}
+      />
 
-        <View style={styles.form}>
-          <AppInput
-            label={t('auth.signIn.emailLabel')}
-            placeholder={t('auth.signIn.emailPlaceholder')}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            error={error}
-          />
+      <AppButton
+        title={t('auth.forgot.submit')}
+        onPress={handleSubmit}
+        loading={isLoading}
+        size="lg"
+      />
 
-          <AppButton
-            title={t('auth.forgot.submit')}
-            onPress={handleSubmit}
-            loading={isLoading}
-            size="lg"
-          />
-
-          <AppButton
-            title={t('auth.forgot.backToSignIn')}
-            onPress={() => router.back()}
-            variant="ghost"
-          />
-        </View>
-      </ScrollView>
-    </ScreenWrapper>
+      <AppButton
+        title={t('auth.forgot.backToSignIn')}
+        onPress={() => router.back()}
+        variant="ghost"
+      />
+    </AuthScreen>
   );
 }
-
-const useStyles = makeStyles((colors) => StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  emoji: { fontSize: 48, marginBottom: spacing.md },
-  title: { ...typography.h1, color: colors.textPrimary, marginBottom: spacing.xs },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  form: { gap: spacing.md },
-}));

@@ -83,6 +83,8 @@ Expo, Flutter, and KMP starters.
 - KMP uses iOS arm64 + simulator arm64 targets (Compose MP no longer publishes
   iosX64 artifacts).
 - CI now builds, tests, and verifies generated Expo, Flutter, and KMP projects.
+- Expo auth screens share an `AuthScreen` layout, and unused catalog keys and
+  template dependencies were removed.
 - README, CONTRIBUTING, license year, package metadata, and repository URLs.
 
 ### Fixed

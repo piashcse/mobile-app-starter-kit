@@ -45,8 +45,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).t('auth.forgot.title'))),
+      appBar: AppBar(title: Text(l10n.t('auth.forgot.title'))),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -54,12 +55,12 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             children: [
               const Text('🔐', style: TextStyle(fontSize: 48)),
               const SizedBox(height: 16),
-              Text(AppLocalizations.of(context).t('auth.forgot.title'), style: Theme.of(context).textTheme.headlineLarge),
+              Text(l10n.t('auth.forgot.title'), style: Theme.of(context).textTheme.headlineLarge),
               const SizedBox(height: 8),
-              Text(AppLocalizations.of(context).t('auth.forgot.subtitle'), style: Theme.of(context).textTheme.bodyMedium),
+              Text(l10n.t('auth.forgot.subtitle'), style: Theme.of(context).textTheme.bodyMedium),
               const SizedBox(height: 32),
-              AppInput(label: AppLocalizations.of(context).t('auth.signIn.emailLabel'), hint: AppLocalizations.of(context).t('auth.signIn.emailPlaceholder'), controller: _emailController, keyboardType: TextInputType.emailAddress, prefixIcon: Icons.email_outlined),
-              AppButton(title: AppLocalizations.of(context).t('auth.forgot.submit'), onPressed: _handleSubmit, isLoading: _isLoading),
+              AppInput(label: l10n.t('auth.signIn.emailLabel'), hint: l10n.t('auth.signIn.emailPlaceholder'), controller: _emailController, keyboardType: TextInputType.emailAddress, prefixIcon: Icons.email_outlined),
+              AppButton(title: l10n.t('auth.forgot.submit'), onPressed: _handleSubmit, isLoading: _isLoading),
             ],
           ),
         ),

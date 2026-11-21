@@ -54,19 +54,20 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context).t('auth.changePassword.title'))),
+      appBar: AppBar(title: Text(l10n.t('auth.changePassword.title'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(children: [
           const Text('🔑', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
-          Text(AppLocalizations.of(context).t('auth.changePassword.title'), style: Theme.of(context).textTheme.headlineMedium),
+          Text(l10n.t('auth.changePassword.title'), style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 32),
-          AppInput(label: AppLocalizations.of(context).t('auth.changePassword.currentLabel'), controller: _currentController, obscureText: true, prefixIcon: Icons.lock_outlined),
-          AppInput(label: AppLocalizations.of(context).t('auth.changePassword.newLabel'), controller: _newController, obscureText: true, prefixIcon: Icons.lock_outlined),
-          AppInput(label: AppLocalizations.of(context).t('auth.changePassword.confirmLabel'), controller: _confirmController, obscureText: true, prefixIcon: Icons.lock_outlined),
-          AppButton(title: AppLocalizations.of(context).t('auth.changePassword.submit'), onPressed: _handleSubmit, isLoading: _isLoading),
+          AppInput(label: l10n.t('auth.changePassword.currentLabel'), controller: _currentController, obscureText: true, prefixIcon: Icons.lock_outlined),
+          AppInput(label: l10n.t('auth.changePassword.newLabel'), controller: _newController, obscureText: true, prefixIcon: Icons.lock_outlined),
+          AppInput(label: l10n.t('auth.changePassword.confirmLabel'), controller: _confirmController, obscureText: true, prefixIcon: Icons.lock_outlined),
+          AppButton(title: l10n.t('auth.changePassword.submit'), onPressed: _handleSubmit, isLoading: _isLoading),
         ]),
       ),
     );
