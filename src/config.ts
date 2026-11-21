@@ -37,8 +37,7 @@ export const FRAMEWORKS: {
   {
     id: 'kmp',
     name: 'KMP (Kotlin Multiplatform)',
-    description:
-      'Compose Multiplatform with MVVM, Compose Navigation, and Ktor',
+    description: 'Compose Multiplatform with MVVM, Navigation 3, and Ktor',
   },
 ];
 

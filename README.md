@@ -61,11 +61,11 @@ npx mobile-app-starter-kit doctor
 
 ## 🏗️ Supported Frameworks
 
-| Framework      | Versions                         | State                | Navigation         | Theme                          |
-| -------------- | -------------------------------- | -------------------- | ------------------ | ------------------------------ |
-| ⚛️ **Expo**    | Expo SDK 58 · RN 0.88 · React 19 | RTK Query + Zustand  | Expo Router        | Light/dark + toggle            |
-| 💙 **Flutter** | Flutter 3.50 · Dart 3.14         | Riverpod 3           | GoRouter           | Material 3 light/dark + toggle |
-| 🚀 **KMP**     | Kotlin 2.4 · Compose MP 1.11     | StateFlow ViewModels | Compose Navigation | Material 3 light/dark          |
+| Framework      | Versions                         | State                | Navigation   | Theme                          |
+| -------------- | -------------------------------- | -------------------- | ------------ | ------------------------------ |
+| ⚛️ **Expo**    | Expo SDK 58 · RN 0.88 · React 19 | RTK Query + Zustand  | Expo Router  | Light/dark + toggle            |
+| 💙 **Flutter** | Flutter 3.50 · Dart 3.14         | Riverpod 3           | GoRouter     | Material 3 light/dark + toggle |
+| 🚀 **KMP**     | Kotlin 2.4 · Compose MP 1.11     | StateFlow ViewModels | Navigation 3 | Material 3 light/dark          |
 
 ---
 
@@ -228,7 +228,7 @@ my-app/
 │   ├── commonMain/kotlin/
 │   │   ├── core/           # Theme, components, API, ViewModel base
 │   │   ├── features/       # MVVM feature modules
-│   │   ├── navigation/     # Type-safe Compose Navigation
+│   │   ├── navigation/     # Type-safe Navigation 3
 │   │   └── di/             # ViewModel factories
 │   └── iosMain/kotlin/     # Compose UIViewController
 ├── androidApp/             # Android entry point

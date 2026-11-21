@@ -13,7 +13,7 @@ const KOTLIN_VERSION = '2.4.21';
 const COMPOSE_VERSION = '1.11.1';
 const AGP_VERSION = '8.13.2';
 const KTOR_VERSION = '3.6.1';
-const NAVIGATION_VERSION = '2.9.0';
+const NAVIGATION_VERSION = '1.1.2';
 const COROUTINES_VERSION = '1.11.0';
 const SERIALIZATION_VERSION = '1.13.0';
 const ACTIVITY_COMPOSE_VERSION = '1.12.4';
@@ -149,7 +149,7 @@ agp = "${AGP_VERSION}"
 kotlin = "${KOTLIN_VERSION}"
 compose-multiplatform = "${COMPOSE_VERSION}"
 ktor = "${KTOR_VERSION}"
-navigation-compose = "${NAVIGATION_VERSION}"
+navigation3 = "${NAVIGATION_VERSION}"
 kotlinx-coroutines = "${COROUTINES_VERSION}"
 kotlinx-serialization = "${SERIALIZATION_VERSION}"
 android-compileSdk = "${COMPILE_SDK}"
@@ -166,7 +166,7 @@ ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negoti
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation-compose" }
+navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -215,7 +215,7 @@ kotlin {
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
-            implementation(libs.navigation.compose)
+            implementation(libs.navigation3.ui)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
@@ -547,23 +547,33 @@ async function generateKmpNavigation(
   const selected = new Set(config.screens);
   const imports: string[] = [];
   const routes: string[] = [];
-  const composables: string[] = [];
+  const entries: string[] = [];
 
   for (const screenId of config.screens) {
     const cases = screenIdToCases(screenId);
     const moduleDir = screenId.replace(/-/g, '');
     imports.push(`import features.${moduleDir}.view.${cases.pascal}Screen`);
-    routes.push(`@Serializable\nobject ${cases.pascal}`);
+    routes.push(`@Serializable\ndata object ${cases.pascal} : AppRoute`);
   }
 
-  const navigateTo = (id: string) =>
-    `navController.navigate(${screenIdToCases(id).pascal}) {
-                    popUpTo(0) { inclusive = true }
-                }`;
+  const pushTo = (id: string) => `backStack.add(${screenIdToCases(id).pascal})`;
 
   const postAuthId = getScreenIdFromCases(context.postAuthScreen);
   const startId = getScreenIdFromCases(context.initialScreen);
   const startDest = startId ? screenIdToCases(startId).pascal : 'SignIn';
+
+  const formatArgs = (args: string[]): string => {
+    if (args.length === 0) return '()';
+    const indented = args
+      .map((arg) =>
+        arg
+          .split('\n')
+          .map((line) => `${' '.repeat(24)}${line}`)
+          .join('\n')
+      )
+      .join(',\n');
+    return `(\n${indented},\n${' '.repeat(20)})`;
+  };
 
   for (const screenId of config.screens) {
     const cases = screenIdToCases(screenId);
@@ -571,42 +581,46 @@ async function generateKmpNavigation(
 
     if (screenId === 'signin') {
       if (selected.has('signup')) {
-        args.push(`onNavigateToSignUp = { navController.navigate(SignUp) }`);
+        args.push('onNavigateToSignUp = { backStack.add(SignUp) }');
       }
       if (selected.has('forgot-password')) {
         args.push(
-          `onNavigateToForgotPassword = { navController.navigate(ForgotPassword) }`
+          'onNavigateToForgotPassword = { backStack.add(ForgotPassword) }'
         );
       }
       if (postAuthId && postAuthId !== 'signin') {
-        args.push(`onSignInSuccess = { ${navigateTo(postAuthId)} }`);
+        args.push(
+          `onSignInSuccess = { resetTo(${screenIdToCases(postAuthId).pascal}) }`
+        );
       }
     }
 
     if (screenId === 'signup') {
       if (postAuthId && postAuthId !== 'signup') {
-        args.push(`onSuccess = { ${navigateTo(postAuthId)} }`);
+        args.push(
+          `onSuccess = { resetTo(${screenIdToCases(postAuthId).pascal}) }`
+        );
       }
     }
 
     if (screenId === 'forgot-password') {
-      args.push(`onBack = { navController.popBackStack() }`);
+      args.push('onBack = { backStack.removeLastOrNull() }');
     }
 
     if (screenId === 'onboarding') {
       if (postAuthId && postAuthId !== 'onboarding') {
-        args.push(`onFinish = { ${navigateTo(postAuthId)} }`);
+        args.push(
+          `onFinish = { resetTo(${screenIdToCases(postAuthId).pascal}) }`
+        );
       }
     }
 
     if (screenId === 'profile') {
       if (selected.has('settings')) {
-        args.push(
-          `onNavigateToSettings = { navController.navigate(Settings) }`
-        );
+        args.push(`onNavigateToSettings = { ${pushTo('settings')} }`);
       }
       if (selected.has('signin')) {
-        args.push(`onSignOut = { ${navigateTo('signin')} }`);
+        args.push('onSignOut = { resetTo(SignIn) }');
       }
     }
 
@@ -623,30 +637,23 @@ async function generateKmpNavigation(
         )
         .map(
           (id) =>
-            `            "${id}" -> navController.navigate(${
-              screenIdToCases(id).pascal
-            })`
+            `        "${id}" -> backStack.add(${screenIdToCases(id).pascal})`
         );
       if (navCases.length > 0) {
         args.push(
           `onNavigate = { id ->
-        when (id) {
+    when (id) {
 ${navCases.join('\n')}
-            else -> Unit
-        }
-    }`
+        else -> Unit
+    }
+}`
         );
       }
     }
 
-    const argBlock =
-      args.length > 0
-        ? `(\n${args.map((a) => `            ${a}`).join(',\n')}\n        )`
-        : '()';
-
-    composables.push(`        composable<${cases.pascal}> {
-            ${cases.pascal}Screen${argBlock}
-        }`);
+    entries.push(`                entry<${cases.pascal}> {
+                    ${cases.pascal}Screen${formatArgs(args)}
+                }`);
   }
 
   const navContent = `package navigation
@@ -659,18 +666,39 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import androidx.savedstate.serialization.SavedStateConfiguration
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclassesOfSealed
 ${imports.join('\n')}
 
-// Type-safe routes
+// Navigation 3 uses a user-owned back stack of serializable keys.
+@Serializable
+sealed interface AppRoute : NavKey
+
 ${routes.join('\n')}
+
+private val navConfig = SavedStateConfiguration {
+    serializersModule = SerializersModule {
+        polymorphic(NavKey::class) {
+            subclassesOfSealed<AppRoute>()
+        }
+    }
+}
 
 @Composable
 fun AppNavigation() {
-    val navController = rememberNavController()
+    val backStack = rememberNavBackStack(navConfig, ${startDest})
+
+    val resetTo: (NavKey) -> Unit = { route ->
+        backStack.clear()
+        backStack.add(route)
+    }
 
     Surface(
         modifier = Modifier
@@ -678,12 +706,13 @@ fun AppNavigation() {
             .windowInsetsPadding(WindowInsets.safeDrawing),
         color = MaterialTheme.colorScheme.background,
     ) {
-        NavHost(
-            navController = navController,
-            startDestination = ${startDest}
-        ) {
-${composables.join('\n\n')}
-        }
+        NavDisplay(
+            backStack = backStack,
+            onBack = { backStack.removeLastOrNull() },
+            entryProvider = entryProvider {
+${entries.join('\n\n')}
+            },
+        )
     }
 }
 `;

@@ -318,6 +318,9 @@ describe('generated projects', () => {
     expect(buildContents[0]).toContain('kotlinSerialization');
     expect(buildContents[0]).toContain('namespace = "com.acme.cool"');
 
+    expect(buildContents[0]).toContain('libs.navigation3.ui');
+    expect(buildContents[0]).not.toContain('libs.navigation.compose');
+
     const navigation = await fs.readFile(
       path.join(
         dir,
@@ -379,6 +382,10 @@ describe('generated projects', () => {
     expect(signIn).toContain('strings.authSignInTitle');
     expect(signIn).toContain('LanguageSwitcher');
     expect(signIn).not.toContain('Welcome Back');
+    expect(navigation).toContain('NavDisplay(');
+    expect(navigation).toContain('rememberNavBackStack');
+    expect(navigation).toContain('sealed interface AppRoute : NavKey');
+    expect(navigation).not.toContain('NavHost(');
     expect(
       await fs.pathExists(
         path.join(
