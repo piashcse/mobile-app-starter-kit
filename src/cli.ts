@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { Command } from 'commander';
-import { initCommand } from './commands/init.js';
+import { initCommand, type InitOptions } from './commands/init.js';
 import { listCommand } from './commands/list.js';
 import { addCommand } from './commands/add.js';
 import { doctorCommand } from './commands/doctor.js';
@@ -70,7 +70,17 @@ Examples:
   $ mobile-app-starter-kit init -n MyApp -f kmp --skip onboarding,terms --no-install
 `
     )
-    .action(initCommand);
+    .action((options: InitOptions, command: Command) => {
+      // Commander defaults negated flags to true. Recover "not supplied" so
+      // interactive runs can still ask about install and git setup.
+      const install =
+        command.getOptionValueSource('install') === 'cli'
+          ? options.install
+          : undefined;
+      const git =
+        command.getOptionValueSource('git') === 'cli' ? options.git : undefined;
+      return initCommand({ ...options, install, git });
+    });
 
   program
     .command('add')

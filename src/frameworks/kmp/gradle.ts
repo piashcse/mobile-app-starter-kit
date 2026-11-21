@@ -3,16 +3,16 @@ import fs from 'fs-extra';
 import type { ProjectConfig } from '../../config.js';
 
 const KOTLIN_VERSION = '2.4.21';
-const COMPOSE_VERSION = '1.11.1';
-const AGP_VERSION = '8.13.2';
+const COMPOSE_VERSION = '1.12.2';
+const AGP_VERSION = '9.5.2';
 const KTOR_VERSION = '3.6.1';
-const NAVIGATION_VERSION = '1.1.2';
+const NAVIGATION_VERSION = '1.2.0';
 const COROUTINES_VERSION = '1.11.0';
 const SERIALIZATION_VERSION = '1.13.0';
 const ACTIVITY_COMPOSE_VERSION = '1.13.0';
-const COMPILE_SDK = '36';
+const COMPILE_SDK = '37';
 const MIN_SDK = '24';
-const TARGET_SDK = '36';
+const TARGET_SDK = '37';
 
 export async function generateKmpBuildFiles(
   config: ProjectConfig,
@@ -24,11 +24,10 @@ export async function generateKmpBuildFiles(
 
   const rootBuildGradle = `plugins {
     alias(libs.plugins.androidApplication) apply false
-    alias(libs.plugins.androidLibrary) apply false
     alias(libs.plugins.composeMultiplatform) apply false
     alias(libs.plugins.composeCompiler) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
-    alias(libs.plugins.kotlinAndroid) apply false
+    alias(libs.plugins.androidMultiplatformLibrary) apply false
     alias(libs.plugins.kotlinSerialization) apply false
     alias(libs.plugins.ktlint) apply false
 }
@@ -111,11 +110,10 @@ navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui",
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version = "14.2.0" }
 `;
@@ -131,7 +129,7 @@ ktlint = { id = "org.jlleitschuh.gradle.ktlint", version = "14.2.0" }
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
@@ -149,10 +147,24 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
-    androidTarget {
+    android {
+        namespace = "${packageName}.shared"
+        compileSdk = libs.versions.android.compileSdk
+            .get()
+            .toInt()
+        minSdk = libs.versions.android.minSdk
+            .get()
+            .toInt()
+
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
         }
+
+        androidResources {
+            enable = true
+        }
+
+        withHostTest {}
     }
 
     listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
@@ -188,24 +200,6 @@ kotlin {
     }
 }
 
-android {
-    namespace = "${packageName}"
-    compileSdk = libs.versions.android.compileSdk
-        .get()
-        .toInt()
-
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk
-            .get()
-            .toInt()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-
 compose.resources {
     packageOfResClass = "app.generated.resources"
 }
@@ -224,7 +218,6 @@ compose.resources {
 
 plugins {
     alias(libs.plugins.androidApplication)
-    alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ktlint)
 }

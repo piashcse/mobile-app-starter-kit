@@ -106,4 +106,4 @@ jobs:
         if: matrix.framework == 'kmp'
         working-directory: test-output/kmp
         run: |
-          ./gradlew ktlintCheck :androidApp:assembleDebug :composeApp:testDebugUnitTest --no-daemon --console=plain
+          ./gradlew ktlintCheck :androidApp:assembleDebug :composeApp:testAndroidHostTest --no-daemon --console=plain

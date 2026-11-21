@@ -320,9 +320,9 @@ describe('generated projects', () => {
       );
     }
 
-    expect(buildContents[0]).toContain('androidLibrary');
+    expect(buildContents[0]).toContain('androidMultiplatformLibrary');
     expect(buildContents[0]).toContain('kotlinSerialization');
-    expect(buildContents[0]).toContain('namespace = "com.acme.cool"');
+    expect(buildContents[0]).toContain('namespace = "com.acme.cool.shared"');
 
     expect(buildContents[0]).toContain('libs.navigation3.ui');
     expect(buildContents[0]).not.toContain('libs.navigation.compose');

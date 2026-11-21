@@ -49,7 +49,7 @@ npx mobile-app-starter-kit init \
   --yes
 ```
 
-> **Requirements:** Node.js **22.13+**. Flutter, JDK 17+, and Xcode are only required for the framework you generate.
+> **Requirements:** Node.js **22.13+**. Flutter, JDK 17+, and Xcode are only required for the framework you generate. KMP projects use AGP 9.5, so open them with Android Studio **Rabbit 2 (2026.1)** or newer and install Android SDK **37**.
 
 > **Flutter design libraries:** on Flutter 3.47+ the generator emits the standalone
 > `material_ui` package and decoupled localizations. Older SDKs keep
@@ -69,7 +69,7 @@ npx mobile-app-starter-kit doctor
 | -------------- | -------------------------------- | -------------------- | ------------ | ------------------------------ |
 | ⚛️ **Expo**    | Expo SDK 58 · RN 0.88 · React 19 | RTK Query + Zustand  | Expo Router  | Light/dark + toggle            |
 | 💙 **Flutter** | Flutter 3.50 · Dart 3.14         | Riverpod 3           | GoRouter     | Material 3 light/dark + toggle |
-| 🚀 **KMP**     | Kotlin 2.4 · Compose MP 1.11     | StateFlow ViewModels | Navigation 3 | Material 3 light/dark          |
+| 🚀 **KMP**     | Kotlin 2.4 · Compose MP 1.12     | StateFlow ViewModels | Navigation 3 | Material 3 light/dark          |
 
 ---
 

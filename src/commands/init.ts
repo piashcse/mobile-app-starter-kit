@@ -55,31 +55,29 @@ export async function initCommand(options: InitOptions): Promise<void> {
   }
 
   // Resolve dependency install / git preferences interactively.
-  if (interactive) {
-    const answers = await inquirer.prompt([
+  if (interactive && !options.dryRun) {
+    const answers = (await inquirer.prompt([
       {
         type: 'confirm',
         name: 'install',
-        message:
-          config.framework === 'kmp'
-            ? 'Generate a Gradle wrapper and validate project files?'
-            : 'Install dependencies now?',
-        default: options.install ?? true,
-        when: options.install === undefined,
+        message: 'Install dependencies now?',
+        default: true,
+        when: options.install === undefined && config.framework !== 'kmp',
       },
       {
         type: 'confirm',
         name: 'git',
         message: 'Initialize a git repository?',
-        default: options.git ?? true,
+        default: true,
         when: options.git === undefined,
       },
-    ]);
-    if (options.install === undefined) install = answers.install;
-    if (options.git === undefined) initGit = answers.git;
+    ])) as { install?: boolean; git?: boolean };
+
+    install = answers.install ?? install;
+    initGit = answers.git ?? initGit;
   }
 
-  printSummary(config);
+  printSummary(config, { install, initGit, dryRun: options.dryRun });
 
   if (options.dryRun) {
     logger.info('Dry run — no files were written.');
@@ -287,7 +285,10 @@ async function promptUser(options: InitOptions): Promise<ProjectConfig> {
   return resolveConfig(merged);
 }
 
-function printSummary(config: ProjectConfig): void {
+function printSummary(
+  config: ProjectConfig,
+  options: { install: boolean; initGit: boolean; dryRun?: boolean }
+): void {
   const frameworkName =
     FRAMEWORKS.find((f) => f.id === config.framework)?.name ?? config.framework;
 
@@ -297,6 +298,12 @@ function printSummary(config: ProjectConfig): void {
   logger.info(`Screens:   ${config.screens.join(', ')}`);
   logger.info(`Package:   ${config.packageName}`);
   logger.info(`Output:    ${config.outputDir}`);
+  if (!options.dryRun) {
+    if (config.framework !== 'kmp') {
+      logger.info(`Install:   ${options.install ? 'yes' : 'no'}`);
+    }
+    logger.info(`Git:       ${options.initGit ? 'yes' : 'no'}`);
+  }
   logger.blank();
 }
 
