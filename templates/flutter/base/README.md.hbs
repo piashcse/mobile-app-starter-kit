@@ -24,15 +24,17 @@ flutter run
 
 - Shared design tokens: `design-tokens.json`
 - Light/dark theme with a persisted toggle
-- English + Spanish localization foundation with a Sign In reference slice
+- English + Spanish localization across all screens
 - Add strings to the shared catalog in the CLI and regenerate to extend it
 
 ## Architecture
 
-- **Feature-first layers** (`data`, `presentation`)
+- **Feature-first layers** (`data`, `domain`, `presentation`)
 - **Riverpod** state management
 - **GoRouter** navigation with typed routes
-- **Dio** API client with a mock interceptor
+- **Dio** API client with a mock interceptor and shared provider
+- **Use cases** in `domain/` with repository interfaces
+- **Config** via `--dart-define` + logger/analytics abstractions
 - **Material 3** light/dark themes
 
 ## Replacing the mock API

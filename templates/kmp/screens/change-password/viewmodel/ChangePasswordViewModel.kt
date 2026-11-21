@@ -52,7 +52,7 @@ class ChangePasswordViewModel(
 
         if (validation != null) {
             _state.value = current.copy(
-                submitState = UiState.Error(AppError.Validation(validation))
+                submitState = UiState.Error(AppError.Validation(validation)),
             )
             return
         }
@@ -64,12 +64,12 @@ class ChangePasswordViewModel(
                 current.newPassword,
             ).onSuccess {
                 _state.value = _state.value.copy(
-                    submitState = UiState.Success(Unit)
+                    submitState = UiState.Success(Unit),
                 )
                 onSuccess()
             }.onFailure { error ->
                 _state.value = _state.value.copy(
-                    submitState = UiState.Error(error.toAppError())
+                    submitState = UiState.Error(error.toAppError()),
                 )
             }
         }

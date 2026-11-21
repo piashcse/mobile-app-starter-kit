@@ -8,7 +8,6 @@ import app.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import core.theme.AppSizes
 
 @Composable

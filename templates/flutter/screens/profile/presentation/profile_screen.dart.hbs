@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../core/l10n/app_localizations.dart';
 {{#if hasProfileLinks}}
 import 'package:go_router/go_router.dart';
 {{/if}}
@@ -16,6 +17,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(profileControllerProvider);
+    final l10n = AppLocalizations.of(context);
 
     if (state.isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -24,7 +26,7 @@ class ProfileScreen extends ConsumerWidget {
     final profile = state.profile;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(title: Text(l10n.t('profile.title'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -36,7 +38,7 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Text(profile?.name ?? 'User', style: Theme.of(context).textTheme.headlineMedium),
+            Text(profile?.name ?? l10n.t('common.user'), style: Theme.of(context).textTheme.headlineMedium),
             const SizedBox(height: 4),
             Text(profile?.email ?? '', style: Theme.of(context).textTheme.bodyMedium),
             if (profile?.bio != null) ...[
@@ -51,11 +53,11 @@ class ProfileScreen extends ConsumerWidget {
             AppCard(
               child: Column(
                 children: [
-                  _infoRow(context, '📧', 'Email', profile?.email ?? ''),
+                  _infoRow(context, '📧', l10n.t('common.email'), profile?.email ?? ''),
                   Divider(color: Theme.of(context).colorScheme.outlineVariant, height: 1),
-                  _infoRow(context, '📱', 'Phone', profile?.phone ?? 'Not set'),
+                  _infoRow(context, '📱', l10n.t('common.phone'), profile?.phone ?? l10n.t('common.notSet')),
                   Divider(color: Theme.of(context).colorScheme.outlineVariant, height: 1),
-                  _infoRow(context, '📍', 'Location', profile?.location ?? 'Not set'),
+                  _infoRow(context, '📍', l10n.t('common.location'), profile?.location ?? l10n.t('common.notSet')),
                 ],
               ),
             ),
@@ -63,7 +65,7 @@ class ProfileScreen extends ConsumerWidget {
 {{#if hasSettings}}
             const SizedBox(height: 8),
             AppButton(
-              title: 'Settings',
+              title: l10n.t('common.settings'),
               onPressed: () => context.push('/settings'),
               isOutlined: true,
             ),
@@ -71,7 +73,7 @@ class ProfileScreen extends ConsumerWidget {
 {{#if hasSignIn}}
             const SizedBox(height: 8),
             AppButton(
-              title: 'Sign Out',
+              title: l10n.t('common.signOut'),
               onPressed: () async {
                 await ref.read(authProvider.notifier).signOut();
                 if (context.mounted) context.go('/signin');

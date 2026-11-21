@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/api/mock_data.dart';
+import '../../../core/l10n/app_localizations.dart';
 
 class PrivacyPolicyScreen extends StatelessWidget {
   const PrivacyPolicyScreen({super.key});
@@ -7,10 +7,10 @@ class PrivacyPolicyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Privacy Policy')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).t('settings.privacyPolicy'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
-        child: Text(MockData.privacyPolicy, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6)),
+        child: Text(AppLocalizations.of(context).t('legal.privacyPolicy'), style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.6)),
       ),
     );
   }

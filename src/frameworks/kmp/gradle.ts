@@ -30,6 +30,7 @@ export async function generateKmpBuildFiles(
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.kotlinAndroid) apply false
     alias(libs.plugins.kotlinSerialization) apply false
+    alias(libs.plugins.ktlint) apply false
 }
 `;
   await fs.writeFile(
@@ -116,6 +117,7 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version = "14.2.0" }
 `;
   await fs.ensureDir(path.join(outputDir, 'gradle'));
   await fs.writeFile(
@@ -133,6 +135,13 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.ktlint)
+}
+
+ktlint {
+    filter {
+        exclude { it.file.path.contains("generated") }
+    }
 }
 
 kotlin {
@@ -181,10 +190,14 @@ kotlin {
 
 android {
     namespace = "${packageName}"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = libs.versions.android.compileSdk
+        .get()
+        .toInt()
 
     defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk
+            .get()
+            .toInt()
     }
 
     compileOptions {
@@ -213,16 +226,29 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.ktlint)
+}
+
+ktlint {
+    filter {
+        exclude { it.file.path.contains("generated") }
+    }
 }
 
 android {
     namespace = "${packageName}"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = libs.versions.android.compileSdk
+        .get()
+        .toInt()
 
     defaultConfig {
         applicationId = "${packageName}"
-        minSdk = libs.versions.android.minSdk.get().toInt()
-        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk
+            .get()
+            .toInt()
+        targetSdk = libs.versions.android.targetSdk
+            .get()
+            .toInt()
         versionCode = 1
         versionName = "1.0"
     }

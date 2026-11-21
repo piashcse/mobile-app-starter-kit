@@ -161,7 +161,7 @@ ${imports.join('\n')}
 @Serializable
 sealed interface AppRoute : NavKey
 
-${routes.join('\n')}
+${routes.join('\n\n')}
 
 @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 private val navConfig = SavedStateConfiguration {

@@ -1,14 +1,15 @@
 import { ScrollView, Text, StyleSheet } from 'react-native';
 import { ScreenWrapper } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
-import { mockData } from '../../api/mockData';
+import { useTranslation } from '../../i18n';
 
 export default function PrivacyPolicyScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   return (
     <ScreenWrapper>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.content}>{mockData.app.privacyPolicy}</Text>
+        <Text style={styles.content}>{t('legal.privacyPolicy')}</Text>
       </ScrollView>
     </ScreenWrapper>
   );

@@ -66,7 +66,9 @@ fun AppInput(
                         )
                     }
                 }
-            } else null,
+            } else {
+                null
+            },
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,

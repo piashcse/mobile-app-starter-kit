@@ -316,9 +316,9 @@ async function copyUpdatedFiles(
       path.join(tempDir, 'app'),
       path.join(project.outputDir, 'app')
     );
-    await copyIfExists(
-      path.join(tempDir, 'src', 'api', 'apiSlice.ts'),
-      path.join(project.outputDir, 'src', 'api', 'apiSlice.ts')
+    await copyIfMissing(
+      path.join(tempDir, 'src', 'api', 'baseApi.ts'),
+      path.join(project.outputDir, 'src', 'api', 'baseApi.ts')
     );
     return;
   }

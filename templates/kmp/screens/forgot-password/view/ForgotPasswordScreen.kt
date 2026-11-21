@@ -26,7 +26,6 @@ import core.theme.AppSizes
 import core.theme.AppSpacing
 import core.viewmodel.UiState
 import di.ViewModelProvider
-import features.forgotpassword.viewmodel.ForgotPasswordViewModel
 
 @Composable
 fun ForgotPasswordScreen(onBack: () -> Unit = {}) {
@@ -34,7 +33,7 @@ fun ForgotPasswordScreen(onBack: () -> Unit = {}) {
     DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val email by viewModel.email.collectAsState()
     val state by viewModel.state.collectAsState()
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()

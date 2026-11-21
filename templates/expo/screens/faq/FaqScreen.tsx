@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, LayoutAnimation, Platform, UIManager } from 'react-native';
 import { ScreenWrapper, LoadingSpinner } from '../../components';
 import { makeStyles, typography, spacing, borderRadius } from '../../theme';
-import { useGetFaqQuery } from '../../api/apiSlice';
+import { useGetFaqQuery } from './api';
+import { useTranslation } from '../../i18n';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -10,6 +11,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 export default function FaqScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   const { data: faqItems, isLoading } = useGetFaqQuery();
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -18,15 +20,15 @@ export default function FaqScreen() {
     setExpandedId(expandedId === id ? null : id);
   };
 
-  if (isLoading) return <LoadingSpinner fullScreen message="Loading FAQ..." />;
+  if (isLoading) return <LoadingSpinner fullScreen message={t('faq.loading')} />;
 
   return (
     <ScreenWrapper>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.emoji}>❓</Text>
-          <Text style={styles.title}>Frequently Asked Questions</Text>
-          <Text style={styles.subtitle}>Find answers to common questions</Text>
+          <Text style={styles.title}>{t('faq.heading')}</Text>
+          <Text style={styles.subtitle}>{t('faq.subtitle')}</Text>
         </View>
 
         <View style={styles.list}>

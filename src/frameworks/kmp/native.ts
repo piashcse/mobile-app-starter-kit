@@ -25,6 +25,7 @@ export async function generateKmpNativeFiles(
 import core.theme.AppTheme
 import navigation.AppNavigation
 
+@Suppress("ktlint:standard:function-naming")
 fun MainViewController() = ComposeUIViewController {
     AppTheme {
         AppNavigation()

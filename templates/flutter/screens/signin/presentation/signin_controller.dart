@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/signin_repository.dart';
+import '../domain/usecases/signin_usecase.dart';
+import '../../../core/observability/analytics.dart';
+import '../providers.dart';
 
 class SignInState {
   final bool isLoading;
@@ -22,13 +24,16 @@ class SignInState {
 }
 
 class SignInController extends Notifier<SignInState> {
+  late final SignInUseCase _signIn = ref.read(signInUseCaseProvider);
+
   @override
   SignInState build() => const SignInState();
 
   Future<bool> signIn(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await ref.read(signInRepositoryProvider).signIn(email, password);
+      await _signIn(email, password);
+      ref.read(analyticsProvider).track('sign_in');
       state = state.copyWith(isLoading: false, isAuthenticated: true);
       return true;
     } catch (e) {

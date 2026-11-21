@@ -3,11 +3,14 @@ import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Ale
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppButton, AppInput } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
-import { useRegisterMutation } from '../../api/apiSlice';
+import { useRegisterMutation } from './api';
 import { getErrorMessage } from '../../utils/errors';
+import { useTranslation } from '../../i18n';
+import { isEmail, isStrongPassword } from '../../utils/validation';
 
 export default function SignUpScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -19,12 +22,14 @@ export default function SignUpScreen() {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!name.trim()) newErrors.name = 'Name is required';
-    if (!email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(email)) newErrors.email = 'Invalid email format';
-    if (!password.trim()) newErrors.password = 'Password is required';
-    else if (password.length < 8) newErrors.password = 'Password must be at least 8 characters';
-    if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (!name.trim()) newErrors.name = t('validation.nameRequired');
+    if (!email.trim()) newErrors.email = t('validation.emailRequired');
+    else if (!isEmail(email)) newErrors.email = t('validation.emailInvalid');
+    if (!password.trim()) newErrors.password = t('validation.passwordRequired');
+    else if (!isStrongPassword(password))
+      newErrors.password = t('validation.passwordTooShort');
+    if (password !== confirmPassword)
+      newErrors.confirmPassword = t('validation.passwordsDoNotMatch');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -32,12 +37,15 @@ export default function SignUpScreen() {
   const handleSignUp = async () => {
     if (!validate()) return;
     try {
-      const result = await register({ name, email, password }).unwrap();
-      Alert.alert('Success', result.message, [
-        { text: 'Sign In', onPress: () => router.back() },
+      await register({ name, email, password }).unwrap();
+      Alert.alert(t('common.success'), t('auth.signUp.successMessage'), [
+        { text: t('auth.signIn.submit'), onPress: () => router.back() },
       ]);
     } catch (error: unknown) {
-      Alert.alert('Error', getErrorMessage(error, 'Registration failed'));
+      Alert.alert(
+        t('common.errorTitle'),
+        getErrorMessage(error, t('auth.signUp.error'))
+      );
     }
   };
 
@@ -53,14 +61,14 @@ export default function SignUpScreen() {
         >
           <View style={styles.header}>
             <Text style={styles.emoji}>🚀</Text>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join us and start your journey</Text>
+            <Text style={styles.title}>{t('auth.signUp.title')}</Text>
+            <Text style={styles.subtitle}>{t('auth.signUp.subtitle')}</Text>
           </View>
 
           <View style={styles.form}>
             <AppInput
-              label="Full Name"
-              placeholder="Enter your name"
+              label={t('auth.signUp.nameLabel')}
+              placeholder={t('auth.signUp.namePlaceholder')}
               value={name}
               onChangeText={setName}
               autoCapitalize="words"
@@ -68,8 +76,8 @@ export default function SignUpScreen() {
             />
 
             <AppInput
-              label="Email"
-              placeholder="Enter your email"
+              label={t('auth.signIn.emailLabel')}
+              placeholder={t('auth.signIn.emailPlaceholder')}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -78,8 +86,8 @@ export default function SignUpScreen() {
             />
 
             <AppInput
-              label="Password"
-              placeholder="Create a password (min 8 chars)"
+              label={t('auth.signIn.passwordLabel')}
+              placeholder={t('auth.signUp.passwordPlaceholder')}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -87,8 +95,8 @@ export default function SignUpScreen() {
             />
 
             <AppInput
-              label="Confirm Password"
-              placeholder="Confirm your password"
+              label={t('auth.signUp.confirmPasswordLabel')}
+              placeholder={t('auth.signUp.confirmPasswordPlaceholder')}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
@@ -96,7 +104,7 @@ export default function SignUpScreen() {
             />
 
             <AppButton
-              title="Create Account"
+              title={t('auth.signUp.submit')}
               onPress={handleSignUp}
               loading={isLoading}
               size="lg"
@@ -104,9 +112,9 @@ export default function SignUpScreen() {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account?</Text>
+            <Text style={styles.footerText}>{t('auth.signUp.signInPrompt')}</Text>
             <AppButton
-              title="Sign In"
+              title={t('auth.signUp.signInAction')}
               onPress={() => router.back()}
               variant="ghost"
               size="sm"

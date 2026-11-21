@@ -4,6 +4,7 @@ import core.api.ApiClient
 import core.api.LoginResponse
 import core.error.AppError
 import core.error.toAppError
+import core.observability.AnalyticsProvider
 import core.validation.validateEmail
 import core.validation.validatePassword
 import core.viewmodel.BaseViewModel
@@ -38,7 +39,7 @@ class SignInViewModel(private val apiClient: ApiClient) : BaseViewModel() {
 
         if (validation != null) {
             _state.value = current.copy(
-                loginState = UiState.Error(AppError.Validation(validation))
+                loginState = UiState.Error(AppError.Validation(validation)),
             )
             return
         }
@@ -48,13 +49,14 @@ class SignInViewModel(private val apiClient: ApiClient) : BaseViewModel() {
             apiClient.login(current.email.trim(), current.password)
                 .onSuccess { response ->
                     _state.value = _state.value.copy(
-                        loginState = UiState.Success(response)
+                        loginState = UiState.Success(response),
                     )
+                    AnalyticsProvider.analytics.track("sign_in")
                     onSuccess()
                 }
                 .onFailure { error ->
                     _state.value = _state.value.copy(
-                        loginState = UiState.Error(error.toAppError())
+                        loginState = UiState.Error(error.toAppError()),
                     )
                 }
         }

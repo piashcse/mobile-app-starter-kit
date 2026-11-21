@@ -3,11 +3,14 @@ import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppButton, AppInput } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
-import { useForgotPasswordMutation } from '../../api/apiSlice';
+import { useForgotPasswordMutation } from './api';
 import { getErrorMessage } from '../../utils/errors';
+import { useTranslation } from '../../i18n';
+import { isEmail } from '../../utils/validation';
 
 export default function ForgotPasswordScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -16,24 +19,24 @@ export default function ForgotPasswordScreen() {
 
   const handleSubmit = async () => {
     if (!email.trim()) {
-      setError('Email is required');
+      setError(t('validation.emailRequired'));
       return;
     }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setError('Invalid email format');
+    if (!isEmail(email)) {
+      setError(t('validation.emailInvalid'));
       return;
     }
     setError('');
 
     try {
-      const result = await forgotPassword({ email }).unwrap();
-      Alert.alert('Success', result.message, [
-        { text: 'Back to Sign In', onPress: () => router.back() },
+      await forgotPassword({ email }).unwrap();
+      Alert.alert(t('common.success'), t('auth.forgot.successMessage'), [
+        { text: t('auth.forgot.backToSignIn'), onPress: () => router.back() },
       ]);
     } catch (error: unknown) {
       Alert.alert(
-        'Error',
-        getErrorMessage(error, 'Something went wrong. Please try again.')
+        t('common.errorTitle'),
+        getErrorMessage(error, t('common.errorGeneric'))
       );
     }
   };
@@ -43,16 +46,14 @@ export default function ForgotPasswordScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.emoji}>🔐</Text>
-          <Text style={styles.title}>Forgot Password?</Text>
-          <Text style={styles.subtitle}>
-            No worries! Enter your email and we&apos;ll send you a reset link.
-          </Text>
+          <Text style={styles.title}>{t('auth.forgot.title')}</Text>
+          <Text style={styles.subtitle}>{t('auth.forgot.subtitle')}</Text>
         </View>
 
         <View style={styles.form}>
           <AppInput
-            label="Email Address"
-            placeholder="Enter your registered email"
+            label={t('auth.signIn.emailLabel')}
+            placeholder={t('auth.signIn.emailPlaceholder')}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -61,14 +62,14 @@ export default function ForgotPasswordScreen() {
           />
 
           <AppButton
-            title="Send Reset Link"
+            title={t('auth.forgot.submit')}
             onPress={handleSubmit}
             loading={isLoading}
             size="lg"
           />
 
           <AppButton
-            title="Back to Sign In"
+            title={t('auth.forgot.backToSignIn')}
             onPress={() => router.back()}
             variant="ghost"
           />

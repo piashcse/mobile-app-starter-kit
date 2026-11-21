@@ -24,14 +24,13 @@ import core.theme.AppSizes
 import core.theme.AppSpacing
 import core.viewmodel.UiState
 import di.ViewModelProvider
-import features.changepassword.viewmodel.ChangePasswordViewModel
 
 @Composable
 fun ChangePasswordScreen(onSuccess: () -> Unit = {}) {
     val viewModel = remember { ViewModelProvider.changePasswordViewModel() }
     DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val state by viewModel.state.collectAsState()
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()

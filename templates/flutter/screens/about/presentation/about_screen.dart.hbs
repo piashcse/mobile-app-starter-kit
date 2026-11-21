@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/api/mock_data.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/widgets/widgets.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -8,8 +9,9 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final about = MockData.about;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('About')),
+      appBar: AppBar(title: Text(l10n.t('settings.about'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -18,22 +20,40 @@ class AboutScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Text('{{appTitle}}', style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 4),
-            Text('Version ${about['version']}', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              l10n.t('common.version', {
+                'version': about['version'] as String,
+              }),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
             const SizedBox(height: 24),
-            AppCard(child: Text(about['description'] as String, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.5))),
+            AppCard(
+              child: Text(
+                l10n.t('about.description'),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(height: 1.5),
+              ),
+            ),
             const SizedBox(height: 16),
             AppCard(
               child: Column(
                 children: [
-                  _row(context, '🌐', 'Website', about['website'] as String),
+                  _row(context, '🌐', l10n.t('common.website'), about['website'] as String),
                   Divider(color: Theme.of(context).colorScheme.outlineVariant),
-                  _row(context, '📧', 'Support', about['supportEmail'] as String),
+                  _row(
+                    context,
+                    '📧',
+                    l10n.t('common.support'),
+                    about['supportEmail'] as String,
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 24),
             AppButton(
-              title: 'Visit Website',
+              title: l10n.t('about.visitWebsite'),
               onPressed: () => launchUrl(
                 Uri.parse(about['website'] as String),
                 mode: LaunchMode.externalApplication,
@@ -42,14 +62,19 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             AppButton(
-              title: 'Contact Support',
+              title: l10n.t('about.contactSupport'),
               onPressed: () => launchUrl(
                 Uri(scheme: 'mailto', path: about['supportEmail'] as String),
               ),
               isText: true,
             ),
             const SizedBox(height: 16),
-            Text('© ${DateTime.now().year} All rights reserved.', style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              l10n.t('common.copyright', {
+                'year': DateTime.now().year.toString(),
+              }),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
         ),
       ),

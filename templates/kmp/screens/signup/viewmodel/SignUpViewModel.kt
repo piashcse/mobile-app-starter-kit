@@ -54,7 +54,7 @@ class SignUpViewModel(private val apiClient: ApiClient) : BaseViewModel() {
 
         if (validation != null) {
             _state.value = current.copy(
-                registerState = UiState.Error(AppError.Validation(validation))
+                registerState = UiState.Error(AppError.Validation(validation)),
             )
             return
         }
@@ -70,7 +70,7 @@ class SignUpViewModel(private val apiClient: ApiClient) : BaseViewModel() {
                 onSuccess()
             }.onFailure { error ->
                 _state.value = _state.value.copy(
-                    registerState = UiState.Error(error.toAppError())
+                    registerState = UiState.Error(error.toAppError()),
                 )
             }
         }

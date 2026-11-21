@@ -114,81 +114,11 @@ export const mockData = {
     ],
   },
   app: {
-    privacyPolicy: `# Privacy Policy
-
-**Last Updated: March 2025**
-
-## 1. Information We Collect
-
-We collect information you provide directly to us, such as when you create an account, update your profile, or contact us for support.
-
-### Personal Information
-- Name and email address
-- Phone number (optional)
-- Profile picture (optional)
-- Usage data and analytics
-
-## 2. How We Use Your Information
-
-We use the information we collect to:
-- Provide, maintain, and improve our services
-- Send you technical notices and support messages
-- Respond to your comments and questions
-
-## 3. Data Security
-
-We implement industry-standard security measures including AES-256 encryption for data at rest and TLS 1.3 for data in transit.
-
-## 4. Your Rights
-
-You have the right to:
-- Access your personal data
-- Correct inaccurate data
-- Delete your account and data
-- Export your data
-
-## 5. Contact Us
-
-If you have questions, contact us at privacy@example.com.`,
-
-    terms: `# Terms of Service
-
-**Last Updated: March 2025**
-
-## 1. Acceptance of Terms
-
-By accessing or using our app, you agree to be bound by these Terms of Service.
-
-## 2. User Accounts
-
-You are responsible for maintaining the confidentiality of your account credentials and for all activities under your account.
-
-## 3. Acceptable Use
-
-You agree not to:
-- Use the service for any illegal purpose
-- Attempt to gain unauthorized access
-- Interfere with the proper working of the service
-
-## 4. Intellectual Property
-
-All content, features, and functionality are owned by us and are protected by copyright and trademark laws.
-
-## 5. Limitation of Liability
-
-To the fullest extent permitted by law, we shall not be liable for any indirect, incidental, or consequential damages.
-
-## 6. Contact
-
-Questions? Email us at legal@example.com.`,
-
     about: {
       version: '1.0.0',
       buildNumber: '1',
       website: 'https://example.com',
       supportEmail: 'support@example.com',
-      description:
-        'A modern mobile application built with best practices and clean architecture.',
     },
   },
 };

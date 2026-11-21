@@ -15,6 +15,20 @@ const en = {
   'common.language': 'Language',
   'common.languageEnglish': 'English',
   'common.languageSpanish': 'Spanish',
+  'common.success': 'Success',
+  'common.ok': 'OK',
+  'common.user': 'User',
+  'common.loading': 'Loading...',
+  'common.joined': 'Joined',
+  'common.errorTitle': 'Error',
+  'profile.title': 'Profile',
+  'profile.loading': 'Loading profile...',
+  'faq.heading': 'Frequently Asked Questions',
+  'faq.subtitle': 'Find answers to common questions',
+  'faq.loading': 'Loading FAQ...',
+  'notifications.loading': 'Loading notifications...',
+  'about.visitWebsite': 'Visit Website',
+  'about.contactSupport': 'Contact Support',
   'common.cancel': 'Cancel',
   'common.retry': 'Retry',
   'common.notSet': 'Not set',
@@ -38,8 +52,9 @@ const en = {
   'validation.emailRequired': 'Email is required',
   'validation.emailInvalid': 'Invalid email format',
   'validation.passwordRequired': 'Password is required',
-  'validation.passwordTooShort': 'Password must be at least 6 characters',
+  'validation.passwordTooShort': 'Password must be at least 8 characters',
   'validation.passwordsDoNotMatch': 'Passwords do not match',
+  'validation.passwordMustDiffer': 'New password must be different',
   'validation.currentPasswordRequired': 'Current password is required',
 
   // Sign in
@@ -61,12 +76,15 @@ const en = {
   'auth.signIn.error.emailInvalid': 'Invalid email format',
   'auth.signIn.error.passwordRequired': 'Password is required',
   'auth.signIn.error.passwordTooShort':
-    'Password must be at least 6 characters',
+    'Password must be at least 8 characters',
   'auth.signIn.error.invalidCredentials':
     'Login failed. Try test@example.com / password',
 
   // Sign up
   'auth.signUp.title': 'Create Account',
+  'auth.signUp.subtitle': 'Join us and start your journey',
+  'auth.signUp.error': 'Registration failed',
+  'auth.signUp.successMessage': 'Account created successfully!',
   'auth.signUp.nameLabel': 'Full Name',
   'auth.signUp.namePlaceholder': 'Enter your name',
   'auth.signUp.passwordPlaceholder': 'Create a password',
@@ -81,13 +99,20 @@ const en = {
   'auth.forgot.subtitle': 'Enter your email to receive a reset link.',
   'auth.forgot.submit': 'Send Reset Link',
   'auth.forgot.backToSignIn': 'Back to Sign In',
+  'auth.forgot.successMessage': 'Password reset link sent!',
 
   // Change password
   'auth.changePassword.title': 'Change Password',
   'auth.changePassword.currentLabel': 'Current Password',
   'auth.changePassword.newLabel': 'New Password',
   'auth.changePassword.confirmLabel': 'Confirm Password',
+  'auth.changePassword.subtitle': 'Create a strong new password',
   'auth.changePassword.submit': 'Update Password',
+  'auth.changePassword.successMessage': 'Password changed successfully!',
+  'auth.changePassword.error': 'Failed to change password',
+  'auth.changePassword.currentPlaceholder': 'Enter current password',
+  'auth.changePassword.newPlaceholder': 'Enter new password (min 8 chars)',
+  'auth.changePassword.confirmPlaceholder': 'Confirm new password',
 
   // Onboarding
   'onboarding.skip': 'Skip',
@@ -106,6 +131,8 @@ const en = {
   'settings.title': 'Settings',
   'settings.preferences': 'Preferences',
   'settings.account': 'Account',
+  'settings.developer': 'Developer',
+  'settings.useMockApi': 'Use mock API',
   'settings.pushNotifications': 'Push Notifications',
   'settings.darkMode': 'Dark Mode',
   'settings.biometricLogin': 'Biometric Login',
@@ -151,6 +178,20 @@ const es: Record<TranslationKey, string> = {
   'common.language': 'Idioma',
   'common.languageEnglish': 'Inglés',
   'common.languageSpanish': 'Español',
+  'common.success': 'Éxito',
+  'common.ok': 'Aceptar',
+  'common.user': 'Usuario',
+  'common.loading': 'Cargando...',
+  'common.joined': 'Se unió',
+  'common.errorTitle': 'Error',
+  'profile.title': 'Perfil',
+  'profile.loading': 'Cargando perfil...',
+  'faq.heading': 'Preguntas frecuentes',
+  'faq.subtitle': 'Encuentra respuestas a preguntas comunes',
+  'faq.loading': 'Cargando preguntas...',
+  'notifications.loading': 'Cargando notificaciones...',
+  'about.visitWebsite': 'Visitar sitio web',
+  'about.contactSupport': 'Contactar soporte',
   'common.cancel': 'Cancelar',
   'common.retry': 'Reintentar',
   'common.notSet': 'No definido',
@@ -175,8 +216,9 @@ const es: Record<TranslationKey, string> = {
   'validation.emailInvalid': 'Formato de correo inválido',
   'validation.passwordRequired': 'La contraseña es obligatoria',
   'validation.passwordTooShort':
-    'La contraseña debe tener al menos 6 caracteres',
+    'La contraseña debe tener al menos 8 caracteres',
   'validation.passwordsDoNotMatch': 'Las contraseñas no coinciden',
+  'validation.passwordMustDiffer': 'La nueva contraseña debe ser diferente',
   'validation.currentPasswordRequired': 'La contraseña actual es obligatoria',
 
   // Sign in
@@ -198,12 +240,15 @@ const es: Record<TranslationKey, string> = {
   'auth.signIn.error.emailInvalid': 'Formato de correo inválido',
   'auth.signIn.error.passwordRequired': 'La contraseña es obligatoria',
   'auth.signIn.error.passwordTooShort':
-    'La contraseña debe tener al menos 6 caracteres',
+    'La contraseña debe tener al menos 8 caracteres',
   'auth.signIn.error.invalidCredentials':
     'No se pudo iniciar sesión. Usa test@example.com / password',
 
   // Sign up
   'auth.signUp.title': 'Crear cuenta',
+  'auth.signUp.subtitle': 'Únete y comienza tu viaje',
+  'auth.signUp.error': 'No se pudo crear la cuenta',
+  'auth.signUp.successMessage': '¡Cuenta creada correctamente!',
   'auth.signUp.nameLabel': 'Nombre completo',
   'auth.signUp.namePlaceholder': 'Ingresa tu nombre',
   'auth.signUp.passwordPlaceholder': 'Crea una contraseña',
@@ -219,13 +264,21 @@ const es: Record<TranslationKey, string> = {
     'Ingresa tu correo para recibir un enlace de restablecimiento.',
   'auth.forgot.submit': 'Enviar enlace',
   'auth.forgot.backToSignIn': 'Volver a iniciar sesión',
+  'auth.forgot.successMessage': '¡Enlace de restablecimiento enviado!',
 
   // Change password
   'auth.changePassword.title': 'Cambiar contraseña',
   'auth.changePassword.currentLabel': 'Contraseña actual',
   'auth.changePassword.newLabel': 'Nueva contraseña',
   'auth.changePassword.confirmLabel': 'Confirmar contraseña',
+  'auth.changePassword.subtitle': 'Crea una contraseña nueva y segura',
   'auth.changePassword.submit': 'Actualizar contraseña',
+  'auth.changePassword.successMessage':
+    '¡Contraseña actualizada correctamente!',
+  'auth.changePassword.error': 'No se pudo cambiar la contraseña',
+  'auth.changePassword.currentPlaceholder': 'Ingresa la contraseña actual',
+  'auth.changePassword.newPlaceholder': 'Ingresa una nueva contraseña (mín. 8)',
+  'auth.changePassword.confirmPlaceholder': 'Confirma la nueva contraseña',
 
   // Onboarding
   'onboarding.skip': 'Omitir',
@@ -245,6 +298,8 @@ const es: Record<TranslationKey, string> = {
   'settings.title': 'Ajustes',
   'settings.preferences': 'Preferencias',
   'settings.account': 'Cuenta',
+  'settings.developer': 'Desarrollador',
+  'settings.useMockApi': 'Usar API simulada',
   'settings.pushNotifications': 'Notificaciones push',
   'settings.darkMode': 'Modo oscuro',
   'settings.biometricLogin': 'Inicio biométrico',

@@ -16,12 +16,12 @@ import androidx.compose.ui.unit.dp
 import core.components.AppButton
 {{/if}}
 import core.components.AppCard
+{{#if hasSignIn}}
 import core.components.AppGhostButton
+{{/if}}
 import core.error.localized
 import core.theme.AppSizes
-import core.theme.AppSpacing
 import core.viewmodel.UiState
-import features.profile.viewmodel.ProfileViewModel
 import di.ViewModelProvider
 
 @Composable
@@ -32,7 +32,7 @@ fun ProfileScreen(
     val viewModel = remember { ViewModelProvider.profileViewModel() }
     DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val state by viewModel.state.collectAsState()
-    
+
     when (val s = state) {
         is UiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)

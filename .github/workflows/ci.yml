@@ -91,6 +91,7 @@ jobs:
           npm install --no-audit --no-fund
           npx tsc --noEmit
           npm run lint
+          npm test
           npx expo prebuild --no-install --platform all
 
       - name: Verify Flutter project
@@ -105,4 +106,4 @@ jobs:
         if: matrix.framework == 'kmp'
         working-directory: test-output/kmp
         run: |
-          ./gradlew :androidApp:assembleDebug :composeApp:testDebugUnitTest --no-daemon --console=plain
+          ./gradlew ktlintCheck :androidApp:assembleDebug :composeApp:testDebugUnitTest --no-daemon --console=plain

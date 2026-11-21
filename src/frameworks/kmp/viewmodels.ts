@@ -43,7 +43,13 @@ export async function generateKmpViewModels(
     );
   }
 
-  const diContent = `package di
+  const diContent =
+    factories.length === 0
+      ? `package di
+
+object ViewModelProvider
+`
+      : `package di
 
 import core.api.ApiClient
 ${imports.join('\n')}

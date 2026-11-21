@@ -2,9 +2,11 @@ import { View, Text, StyleSheet, ScrollView, Linking } from 'react-native';
 import { ScreenWrapper, AppButton, AppCard } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
 import { mockData } from '../../api/mockData';
+import { useTranslation } from '../../i18n';
 
 export default function AboutScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   const about = mockData.app.about;
 
   return (
@@ -13,33 +15,42 @@ export default function AboutScreen() {
         <View style={styles.header}>
           <Text style={styles.emoji}>📱</Text>
           <Text style={styles.appName}>{{appTitle}}</Text>
-          <Text style={styles.version}>Version {about.version} ({about.buildNumber})</Text>
+          <Text style={styles.version}>
+            {t('common.version', {
+              version: `${about.version} (${about.buildNumber})`,
+            })}
+          </Text>
         </View>
 
         <AppCard style={styles.card}>
-          <Text style={styles.description}>{about.description}</Text>
+          <Text style={styles.description}>{t('about.description')}</Text>
         </AppCard>
 
         <AppCard style={styles.card}>
-          <InfoRow icon="🌐" label="Website" value={about.website} />
-          <InfoRow icon="📧" label="Support" value={about.supportEmail} isLast />
+          <InfoRow icon="🌐" label={t('common.website')} value={about.website} />
+          <InfoRow
+            icon="📧"
+            label={t('common.support')}
+            value={about.supportEmail}
+            isLast
+          />
         </AppCard>
 
         <View style={styles.actions}>
           <AppButton
-            title="Visit Website"
+            title={t('about.visitWebsite')}
             onPress={() => Linking.openURL(about.website)}
             variant="outline"
           />
           <AppButton
-            title="Contact Support"
+            title={t('about.contactSupport')}
             onPress={() => Linking.openURL(`mailto:${about.supportEmail}`)}
             variant="secondary"
           />
         </View>
 
         <Text style={styles.copyright}>
-          © {new Date().getFullYear()} All rights reserved.
+          {t('common.copyright', { year: new Date().getFullYear() })}
         </Text>
       </ScrollView>
     </ScreenWrapper>

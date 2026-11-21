@@ -1,0 +1,7 @@
+[*.{kt,kts}]
+ktlint_code_style = intellij_idea
+ij_kotlin_allow_wildcard_imports = true
+max_line_length = off
+ktlint_standard_function-naming = disabled
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_import-ordering = disabled

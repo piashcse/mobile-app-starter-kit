@@ -34,14 +34,13 @@ import core.theme.AppSizes
 import core.theme.AppSpacing
 import core.viewmodel.UiState
 import di.ViewModelProvider
-import features.faq.viewmodel.FaqViewModel
 
 @Composable
 fun FaqScreen() {
     val viewModel = remember { ViewModelProvider.faqViewModel() }
     DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val state by viewModel.state.collectAsState()
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()

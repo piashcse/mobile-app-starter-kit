@@ -11,9 +11,11 @@ import {
 } from '../../components';
 import { makeStyles, typography, spacing, borderRadius } from '../../theme';
 import { useTranslation } from '../../i18n';
-import { useLoginMutation } from '../../api/apiSlice';
+import { analytics } from '../../core/observability';
+import { useLoginMutation } from './api';
 import { useAuthStore } from '../../store/authStore';
 import { getErrorMessage } from '../../utils/errors';
+import { isEmail, isStrongPassword } from '../../utils/validation';
 
 export default function SignInScreen() {
   const styles = useStyles();
@@ -31,11 +33,11 @@ export default function SignInScreen() {
   const validate = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
     if (!email.trim()) newErrors.email = t('auth.signIn.error.emailRequired');
-    else if (!/\S+@\S+\.\S+/.test(email))
+    else if (!isEmail(email))
       newErrors.email = t('auth.signIn.error.emailInvalid');
     if (!password.trim())
       newErrors.password = t('auth.signIn.error.passwordRequired');
-    else if (password.length < 6)
+    else if (!isStrongPassword(password))
       newErrors.password = t('auth.signIn.error.passwordTooShort');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -46,6 +48,7 @@ export default function SignInScreen() {
     try {
       const result = await login({ email, password }).unwrap();
       authLogin(result.token, result.user);
+      analytics.track({ name: 'sign_in' });
 {{#if canNavigateAfterAuth}}
       router.replace('{{postAuthRoute}}');
 {{/if}}

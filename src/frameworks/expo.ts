@@ -51,7 +51,7 @@ export async function generateExpoProject(
 
   // Step 4: Generate API slice with selected endpoints
   logger.step(4, 4, 'Setting up RTK Query API...');
-  await generateRtkApiSlice(config);
+  await generateApiLayer(config);
 }
 
 async function generateExpoRoutes(config: ProjectConfig): Promise<void> {
@@ -232,14 +232,41 @@ export default function ${cases.pascal}Route() {
   }
 }
 
-async function generateRtkApiSlice(config: ProjectConfig): Promise<void> {
+interface ApiModule {
+  name: string;
+  imports: string[];
+  endpoints: string[];
+  hooks: string[];
+  usesMockData: boolean;
+}
+
+async function generateApiLayer(config: ProjectConfig): Promise<void> {
   const apiDir = path.join(config.outputDir, 'src', 'api');
   await fs.ensureDir(apiDir);
 
-  const endpoints: string[] = [];
+  const baseApi = `import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';
+
+export const baseApi = createApi({
+  reducerPath: 'api',
+  baseQuery: fakeBaseQuery(),
+  tagTypes: ['Profile', 'Notifications'],
+  endpoints: () => ({}),
+});
+`;
+  await fs.writeFile(path.join(apiDir, 'baseApi.ts'), baseApi, 'utf-8');
+
+  const modules: Record<string, ApiModule> = {};
 
   if (config.screens.includes('signin')) {
-    endpoints.push(`    login: builder.mutation<LoginResponse, LoginRequest>({
+    modules.signin = {
+      name: 'signInApi',
+      usesMockData: true,
+      imports: [
+        "import type { LoginRequest, LoginResponse } from '../../api/types';",
+      ],
+      hooks: ['useLoginMutation'],
+      endpoints: [
+        `    login: builder.mutation<LoginResponse, LoginRequest>({
       queryFn: async (credentials) => {
         await delay(800);
         if (credentials.email === 'test@example.com' && credentials.password === 'password') {
@@ -247,148 +274,158 @@ async function generateRtkApiSlice(config: ProjectConfig): Promise<void> {
         }
         return { error: { status: 401, data: mockData.auth.login.error } };
       },
-    })`);
+    })`,
+      ],
+    };
   }
 
   if (config.screens.includes('signup')) {
-    endpoints.push(`    register: builder.mutation<MessageResponse, RegisterRequest>({
+    modules.signup = {
+      name: 'signUpApi',
+      usesMockData: true,
+      imports: [
+        "import type { MessageResponse, RegisterRequest } from '../../api/types';",
+      ],
+      hooks: ['useRegisterMutation'],
+      endpoints: [
+        `    register: builder.mutation<MessageResponse, RegisterRequest>({
       queryFn: async () => {
         await delay(800);
         return { data: mockData.auth.register.success };
       },
-    })`);
+    })`,
+      ],
+    };
   }
 
   if (config.screens.includes('forgot-password')) {
-    endpoints.push(`    forgotPassword: builder.mutation<MessageResponse, { email: string }>({
+    modules['forgot-password'] = {
+      name: 'forgotPasswordApi',
+      usesMockData: true,
+      imports: ["import type { MessageResponse } from '../../api/types';"],
+      hooks: ['useForgotPasswordMutation'],
+      endpoints: [
+        `    forgotPassword: builder.mutation<MessageResponse, { email: string }>({
       queryFn: async () => {
         await delay(800);
         return { data: mockData.auth.forgotPassword.success };
       },
-    })`);
+    })`,
+      ],
+    };
+  }
+
+  if (config.screens.includes('change-password')) {
+    modules['change-password'] = {
+      name: 'changePasswordApi',
+      usesMockData: false,
+      imports: [
+        "import type { ChangePasswordRequest, MessageResponse } from '../../api/types';",
+      ],
+      hooks: ['useChangePasswordMutation'],
+      endpoints: [
+        `    changePassword: builder.mutation<MessageResponse, ChangePasswordRequest>({
+      queryFn: async () => {
+        await delay(800);
+        return { data: { message: 'Password changed successfully' } };
+      },
+    })`,
+      ],
+    };
   }
 
   if (config.screens.includes('profile')) {
-    endpoints.push(`    getProfile: builder.query<UserProfile, void>({
+    modules.profile = {
+      name: 'profileApi',
+      usesMockData: true,
+      imports: [
+        "import type { MessageResponse, UserProfile } from '../../api/types';",
+      ],
+      hooks: ['useGetProfileQuery', 'useUpdateProfileMutation'],
+      endpoints: [
+        `    getProfile: builder.query<UserProfile, void>({
       queryFn: async () => {
         await delay(500);
         return { data: mockData.user.profile };
       },
       providesTags: ['Profile'],
-    })`);
-    endpoints.push(`    updateProfile: builder.mutation<MessageResponse, Partial<UserProfile>>({
+    })`,
+        `    updateProfile: builder.mutation<MessageResponse, Partial<UserProfile>>({
       queryFn: async () => {
         await delay(800);
         return { data: mockData.user.updateProfile.success };
       },
       invalidatesTags: ['Profile'],
-    })`);
+    })`,
+      ],
+    };
   }
 
   if (config.screens.includes('faq')) {
-    endpoints.push(`    getFaq: builder.query<FaqItem[], void>({
+    modules.faq = {
+      name: 'faqApi',
+      usesMockData: true,
+      imports: ["import type { FaqItem } from '../../api/types';"],
+      hooks: ['useGetFaqQuery'],
+      endpoints: [
+        `    getFaq: builder.query<FaqItem[], void>({
       queryFn: async () => {
         await delay(500);
         return { data: mockData.faq.items };
       },
-    })`);
+    })`,
+      ],
+    };
   }
 
   if (config.screens.includes('notifications')) {
-    endpoints.push(`    getNotifications: builder.query<NotificationItem[], void>({
+    modules.notifications = {
+      name: 'notificationsApi',
+      usesMockData: true,
+      imports: ["import type { NotificationItem } from '../../api/types';"],
+      hooks: ['useGetNotificationsQuery'],
+      endpoints: [
+        `    getNotifications: builder.query<NotificationItem[], void>({
       queryFn: async () => {
         await delay(500);
         return { data: mockData.notifications.items as NotificationItem[] };
       },
       providesTags: ['Notifications'],
-    })`);
+    })`,
+      ],
+    };
   }
 
-  if (config.screens.includes('change-password')) {
-    endpoints.push(`    changePassword: builder.mutation<MessageResponse, ChangePasswordRequest>({
-      queryFn: async () => {
-        await delay(800);
-        return { data: { message: 'Password changed successfully' } };
-      },
-    })`);
-  }
+  for (const [screenId, apiModule] of Object.entries(modules)) {
+    const imports = [
+      "import { baseApi } from '../../api/baseApi';",
+      apiModule.usesMockData
+        ? "import { mockData } from '../../api/mockData';"
+        : null,
+      ...apiModule.imports,
+    ]
+      .filter(Boolean)
+      .join('\n');
 
-  const usesMockData = config.screens.some((screen) =>
-    [
-      'signin',
-      'signup',
-      'forgot-password',
-      'profile',
-      'faq',
-      'notifications',
-    ].includes(screen)
-  );
-  const usesMessageResponse = config.screens.some((screen) =>
-    ['signup', 'forgot-password', 'profile', 'change-password'].includes(screen)
-  );
+    const content = `${imports}
 
-  const types: string[] = [];
-  if (usesMessageResponse) types.push('MessageResponse');
-  if (config.screens.includes('signin'))
-    types.push('LoginRequest', 'LoginResponse');
-  if (config.screens.includes('signup')) types.push('RegisterRequest');
-  if (config.screens.includes('profile')) types.push('UserProfile');
-  if (config.screens.includes('faq')) types.push('FaqItem');
-  if (config.screens.includes('notifications')) types.push('NotificationItem');
-  if (config.screens.includes('change-password'))
-    types.push('ChangePasswordRequest');
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const hooks: string[] = [];
-  if (config.screens.includes('signin')) hooks.push('useLoginMutation');
-  if (config.screens.includes('signup')) hooks.push('useRegisterMutation');
-  if (config.screens.includes('forgot-password'))
-    hooks.push('useForgotPasswordMutation');
-  if (config.screens.includes('profile'))
-    hooks.push('useGetProfileQuery', 'useUpdateProfileMutation');
-  if (config.screens.includes('faq')) hooks.push('useGetFaqQuery');
-  if (config.screens.includes('notifications'))
-    hooks.push('useGetNotificationsQuery');
-  if (config.screens.includes('change-password'))
-    hooks.push('useChangePasswordMutation');
+export const ${apiModule.name} = baseApi.injectEndpoints({
+  endpoints: (builder) => ({
+${apiModule.endpoints.join(',\n\n')},
+  }),
+});
 
-  const tags: string[] = [];
-  if (config.screens.includes('profile')) tags.push("'Profile'");
-  if (config.screens.includes('notifications')) tags.push("'Notifications'");
-
-  const hasEndpoints = endpoints.length > 0;
-
-  const imports = [
-    "import { createApi, fakeBaseQuery } from '@reduxjs/toolkit/query/react';",
-    usesMockData ? "import { mockData } from './mockData';" : null,
-    types.length > 0
-      ? `import type { ${types.join(', ')} } from './types';`
-      : null,
-  ]
-    .filter(Boolean)
-    .join('\n');
-
-  const delayDeclaration = hasEndpoints
-    ? 'const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));\n\n'
-    : '';
-
-  const endpointsBlock = hasEndpoints
-    ? `(builder) => ({\n${endpoints.join(',\n\n')},\n  })`
-    : '() => ({})';
-
-  const hooksExport =
-    hooks.length > 0
-      ? `\n\nexport const {\n  ${hooks.join(',\n  ')},\n} = api;`
-      : '';
-
-  const apiSlice = `${imports}
-
-${delayDeclaration}export const api = createApi({
-  reducerPath: 'api',
-  baseQuery: fakeBaseQuery(),
-  tagTypes: [${tags.join(', ')}],
-  endpoints: ${endpointsBlock},
-});${hooksExport}
+export const {
+  ${apiModule.hooks.join(',\n  ')},
+} = ${apiModule.name};
 `;
 
-  await fs.writeFile(path.join(apiDir, 'apiSlice.ts'), apiSlice);
+    await fs.writeFile(
+      path.join(config.outputDir, 'src', 'features', screenId, 'api.ts'),
+      content,
+      'utf-8'
+    );
+  }
 }

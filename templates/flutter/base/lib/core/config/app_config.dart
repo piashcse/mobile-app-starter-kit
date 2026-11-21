@@ -12,4 +12,9 @@ class AppConfig {
     'USE_MOCK_API',
     defaultValue: true,
   );
+
+  static const analyticsEnabled = bool.fromEnvironment(
+    'ANALYTICS_ENABLED',
+    defaultValue: true,
+  );
 }

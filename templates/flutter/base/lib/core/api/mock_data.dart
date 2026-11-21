@@ -93,53 +93,10 @@ class MockData {
     },
   ];
 
-  static const privacyPolicy = '''
-# Privacy Policy
-
-**Last Updated: March 2025**
-
-## 1. Information We Collect
-We collect information you provide directly, such as when you create an account.
-
-## 2. How We Use Your Information
-We use information to provide, maintain, and improve our services.
-
-## 3. Data Security
-We implement industry-standard security measures including AES-256 encryption.
-
-## 4. Your Rights
-You have the right to access, correct, delete, and export your data.
-
-## 5. Contact Us
-Questions? Contact us at privacy@example.com.
-''';
-
-  static const terms = '''
-# Terms of Service
-
-**Last Updated: March 2025**
-
-## 1. Acceptance of Terms
-By using our app, you agree to these Terms of Service.
-
-## 2. User Accounts
-You are responsible for maintaining your account credentials.
-
-## 3. Acceptable Use
-Do not use the service for illegal purposes or unauthorized access.
-
-## 4. Intellectual Property
-All content and functionality are owned by us and protected by law.
-
-## 5. Contact
-Questions? Email us at legal@example.com.
-''';
-
   static final about = {
     'version': '1.0.0',
     'buildNumber': '1',
     'website': 'https://example.com',
     'supportEmail': 'support@example.com',
-    'description': 'A modern mobile app built with Flutter and Clean Architecture.',
   };
 }

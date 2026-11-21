@@ -10,39 +10,43 @@ import {
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppButton } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
+import { useTranslation } from '../../i18n';
 
 const { width } = Dimensions.get('window');
 
-const slides = [
-  {
-    id: '1',
-    emoji: '🚀',
-    title: 'Welcome',
-    description: 'Discover a new way to manage your life with our powerful and intuitive app.',
-  },
-  {
-    id: '2',
-    emoji: '🔒',
-    title: 'Secure & Private',
-    description: 'Your data is encrypted and protected with industry-leading security standards.',
-  },
-  {
-    id: '3',
-    emoji: '⚡',
-    title: 'Fast & Reliable',
-    description: 'Built with performance in mind. Experience lightning-fast interactions.',
-  },
-  {
-    id: '4',
-    emoji: '🎯',
-    title: 'Get Started',
-    description: 'Create your account and start your journey today!',
-  },
-];
+
 
 export default function OnboardingScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   const router = useRouter();
+
+  const slides = [
+    {
+      id: '1',
+      emoji: '🚀',
+      title: t('onboarding.slide1.title'),
+      description: t('onboarding.slide1.description'),
+    },
+    {
+      id: '2',
+      emoji: '🔒',
+      title: t('onboarding.slide2.title'),
+      description: t('onboarding.slide2.description'),
+    },
+    {
+      id: '3',
+      emoji: '⚡',
+      title: t('onboarding.slide3.title'),
+      description: t('onboarding.slide3.description'),
+    },
+    {
+      id: '4',
+      emoji: '🎯',
+      title: t('onboarding.slide4.title'),
+      description: t('onboarding.slide4.description'),
+    },
+  ];
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useMemo(() => new Animated.Value(0), []);
@@ -64,7 +68,12 @@ export default function OnboardingScreen() {
       <View style={styles.container}>
         <View style={styles.skipContainer}>
           {currentIndex < slides.length - 1 && (
-            <AppButton title="Skip" onPress={handleSkip} variant="ghost" size="sm" />
+            <AppButton
+              title={t('onboarding.skip')}
+              onPress={handleSkip}
+              variant="ghost"
+              size="sm"
+            />
           )}
         </View>
 
@@ -117,7 +126,11 @@ export default function OnboardingScreen() {
 
         <View style={styles.footer}>
           <AppButton
-            title={currentIndex === slides.length - 1 ? 'Get Started' : 'Next'}
+            title={
+              currentIndex === slides.length - 1
+                ? t('onboarding.getStarted')
+                : t('onboarding.next')
+            }
             onPress={handleNext}
             size="lg"
           />

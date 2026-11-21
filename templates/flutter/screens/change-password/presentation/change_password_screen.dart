@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/widgets/widgets.dart';
-import '../../../core/api/api_client_provider.dart';
+import '../providers.dart';
 
 class ChangePasswordScreen extends ConsumerStatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -17,32 +18,33 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   bool _isLoading = false;
 
   Future<void> _handleSubmit() async {
+    final l10n = AppLocalizations.of(context);
     if (_newController.text != _confirmController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
+        SnackBar(content: Text(l10n.t('validation.passwordsDoNotMatch'))),
       );
       return;
     }
-    if (_newController.text.length < 6) {
+    if (_newController.text.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 6 characters')),
+        SnackBar(content: Text(l10n.t('validation.passwordTooShort'))),
       );
       return;
     }
     setState(() => _isLoading = true);
     try {
-      await ref.read(apiClientProvider).post('/auth/change-password', data: {
-        'currentPassword': _currentController.text,
-        'newPassword': _newController.text,
-      });
+      await ref.read(changePasswordUseCaseProvider)(
+        currentPassword: _currentController.text,
+        newPassword: _newController.text,
+      );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password changed!')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.t('auth.changePassword.successMessage'))));
         context.pop();
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
+          SnackBar(content: Text(l10n.t('auth.changePassword.error'))),
         );
       }
     } finally {
@@ -53,18 +55,18 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Change Password')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context).t('auth.changePassword.title'))),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(children: [
           const Text('🔑', style: TextStyle(fontSize: 48)),
           const SizedBox(height: 16),
-          Text('Change Password', style: Theme.of(context).textTheme.headlineMedium),
+          Text(AppLocalizations.of(context).t('auth.changePassword.title'), style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 32),
-          AppInput(label: 'Current Password', controller: _currentController, obscureText: true, prefixIcon: Icons.lock_outlined),
-          AppInput(label: 'New Password', controller: _newController, obscureText: true, prefixIcon: Icons.lock_outlined),
-          AppInput(label: 'Confirm Password', controller: _confirmController, obscureText: true, prefixIcon: Icons.lock_outlined),
-          AppButton(title: 'Update Password', onPressed: _handleSubmit, isLoading: _isLoading),
+          AppInput(label: AppLocalizations.of(context).t('auth.changePassword.currentLabel'), controller: _currentController, obscureText: true, prefixIcon: Icons.lock_outlined),
+          AppInput(label: AppLocalizations.of(context).t('auth.changePassword.newLabel'), controller: _newController, obscureText: true, prefixIcon: Icons.lock_outlined),
+          AppInput(label: AppLocalizations.of(context).t('auth.changePassword.confirmLabel'), controller: _confirmController, obscureText: true, prefixIcon: Icons.lock_outlined),
+          AppButton(title: AppLocalizations.of(context).t('auth.changePassword.submit'), onPressed: _handleSubmit, isLoading: _isLoading),
         ]),
       ),
     );
