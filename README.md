@@ -1,12 +1,13 @@
 <div align="center">
   <h1>📱 Mobile App Starter Kit</h1>
-  <p><strong>A powerful CLI tool to generate production-ready mobile app boilerplate for Expo, Flutter, and Kotlin Multiplatform (KMP).</strong></p>
+  <p><strong>Generate production-ready mobile app boilerplate for Expo, Flutter, and Kotlin Multiplatform — in one command.</strong></p>
 
   <!-- Badges -->
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License: MIT"></a>
-  <a href="https://www.npmjs.com/package/mobile-app-starter-kit"><img src="https://img.shields.io/npm/v/mobile-app-starter-kit.svg?style=for-the-badge&logo=npm" alt="npm version"></a>
-  <a href="https://github.com/your-username/mobile-app-starter-kit/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-%3E%3D_18-339933.svg?style=for-the-badge&logo=nodedotjs" alt="Node.js Version"></a>
+
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License: MIT"></a>
+<a href="https://www.npmjs.com/package/mobile-app-starter-kit"><img src="https://img.shields.io/npm/v/mobile-app-starter-kit.svg?style=for-the-badge&logo=npm" alt="npm version"></a>
+<a href="https://github.com/piashcse/mobile-app-starter-kit/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/piashcse/mobile-app-starter-kit/ci.yml?style=for-the-badge" alt="CI"></a>
+<a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-%3E%3D22.13-339933.svg?style=for-the-badge&logo=nodedotjs" alt="Node.js Version"></a>
 
   <br />
   <br />
@@ -14,188 +15,270 @@
 
 ## 🌟 Why Mobile App Starter Kit?
 
-Setting up a mobile architecture that scales is incredibly time-consuming. You have to configure navigation, state management, UI libraries, mock APIs, and authentication flows before you even start writing your first business feature.
+Setting up a mobile architecture that scales is time-consuming: navigation, state management, theming, a mock API, auth flows, and native project configuration all have to be wired before you write your first feature.
 
-**Mobile App Starter Kit** solves this by letting you run a single CLI command to spin up a fully configured, feature-rich app in your favorite framework.
+**Mobile App Starter Kit** gives you a fully configured, buildable app in a single command — with **selectable screens**, a **working mock API**, **light/dark themes**, and **CI-verified templates** for all three frameworks.
 
-✨ **Key Features:**
-- 🧩 **Selectable Screens:** Choose exactly what you need (Auth flow, Profile, Settings, FAQ, etc.).
-- 🎨 **Premium UI/UX:** Built-in design system, dark mode matching, and beautifully crafted reusable UI components.
-- 🏗️ **Best-Practice Architecture:** Adheres to the latest community standards for each framework.
-- 🎭 **Mock API Native:** Comes wired up with a simulated local backend so you can start building UI instantly.
-- 🛠️ **Multi-Framework:** Generates perfect templates for **Expo React Native**, **Flutter**, and **Compose Multiplatform (KMP)**.
+✨ **Key features**
+
+- 🧩 **Selectable screens** — include only the screens you need.
+- 🎨 **Light/dark themes** — system-aware themes with a working in-app toggle.
+- 🔐 **Persisted auth** — secure session restore on launch.
+- 🏗️ **Best-practice architecture** — Expo Router + RTK Query, Flutter Clean Architecture + Riverpod, Compose Multiplatform + MVVM.
+- 🎭 **Mock API built in** — email/password demo auth with simulated latency.
+- 🛠️ **Verified templates** — CI type-checks Expo, analyzes Flutter, and builds the KMP Android app.
+- 📦 **Runnable output** — `.gitignore`, README, assets, native projects, and a Gradle wrapper included.
 
 ---
 
 ## ⚡ Quick Start
 
-You don't need to install anything globally. Just use `npx`:
-
 ```bash
-# 1. Interactive mode (Recommended)
+# 1. Interactive mode (recommended)
 npx mobile-app-starter-kit init
 ```
 
-*Want to skip the prompts? Use flags!*
+Skip the prompts with flags:
 
 ```bash
-# 2. One-liner with flags
 npx mobile-app-starter-kit init \
-  --name "MyApp" \
+  --name "My App" \
   --framework expo \
   --screens signin,signup,profile,faq \
-  --package-name com.example.myapp
+  --package-name com.example.myapp \
+  --yes
+```
+
+> **Requirements:** Node.js **22.13+**. Flutter, JDK 17+, and Xcode are only required for the framework you generate.
+
+Check your machine first:
+
+```bash
+npx mobile-app-starter-kit doctor
 ```
 
 ---
 
-## 🏗️ Supported Frameworks & Architecture
+## 🏗️ Supported Frameworks
 
-This tool generates highly opinionated, community-standard architectures depending on your framework of choice:
+| Framework      | Versions                         | State                | Navigation         | Theme                          |
+| -------------- | -------------------------------- | -------------------- | ------------------ | ------------------------------ |
+| ⚛️ **Expo**    | Expo SDK 58 · RN 0.88 · React 19 | RTK Query + Zustand  | Expo Router        | Light/dark + toggle            |
+| 💙 **Flutter** | Flutter 3.50 · Dart 3.14         | Riverpod 3           | GoRouter           | Material 3 light/dark + toggle |
+| 🚀 **KMP**     | Kotlin 2.4 · Compose MP 1.11     | StateFlow ViewModels | Compose Navigation | Material 3 light/dark          |
 
-| Framework | State Management | API Layer | Navigation | Arch. Pattern |
-|-----------|-----------------|-----------|------------|--------------|
-| ⚛️ **Expo** | RTK Query + Zustand | RTK Query | Expo Router | Feature-based |
-| 💙 **Flutter**| Riverpod | Dio + Mock Interceptor | GoRouter | Clean Architecture |
-| 🚀 **KMP** | ViewModel + StateFlow | Ktor Mock Engine | Compose Navigation | MVVM |
+---
+
+## 🎨 Design system & localization
+
+Every generated project is driven by one shared contract, so the three platforms cannot drift:
+
+- **Design tokens** — `src/design/tokens.ts` is emitted as:
+  - `design-tokens.json` at the project root (for designers/tooling)
+  - `src/theme/*` (Expo)
+  - `lib/core/theme/*` (Flutter)
+  - `core/theme/*` (KMP)
+- **Strings** — `src/design/strings.ts` generates:
+  - `src/i18n/*` (Expo, `expo-localization`)
+  - `lib/core/l10n/*` (Flutter, `flutter_localizations`)
+  - `core/i18n/*` (KMP, `CompositionLocal`)
+
+Included out of the box:
+
+- English + Spanish catalogs and a working language switcher on Sign In.
+- Per-platform locale persistence (SecureStore/localStorage, SharedPreferences,
+  SharedPreferences/NSUserDefaults).
+- System-aware light/dark themes with an in-app toggle (persisted on Expo/Flutter).
+- Identical palette, type scale, spacing, radii, and component sizing on all three.
+
+The localized Sign In screen is the reference implementation. Add a key to
+`src/design/strings.ts` and regenerate to extend localization to more screens.
 
 ---
 
 ## 📋 Available Screens
 
-All generated screens are fully responsive and wired to the mock API state.
+| Screen             | ID                | Default | Description                         |
+| ------------------ | ----------------- | :-----: | ----------------------------------- |
+| Sign In            | `signin`          |   ✅    | Email/password auth with validation |
+| Sign Up            | `signup`          |   ✅    | Account creation with validation    |
+| Forgot Password    | `forgot-password` |   ✅    | Password reset flow                 |
+| Change Password    | `change-password` |   ❌    | In-app password update              |
+| Profile            | `profile`         |   ✅    | User profile + sign out             |
+| Settings           | `settings`        |   ✅    | Preferences and theme toggle        |
+| Onboarding         | `onboarding`      |   ❌    | Swipeable intro slides              |
+| FAQ                | `faq`             |   ✅    | Expandable accordion                |
+| Privacy Policy     | `privacy-policy`  |   ✅    | Static legal content                |
+| Terms & Conditions | `terms`           |   ❌    | Terms layout                        |
+| Notifications      | `notifications`   |   ❌    | Read/unread notification list       |
+| About              | `about`           |   ❌    | App version and links               |
 
-| Screen | Identifier | Included by Default | Description |
-|--------|------------|:-------------------:|-------------|
-| **Sign In** | `signin` | ✅ | Email/password auth, loading states, validation. |
-| **Sign Up** | `signup` | ✅ | Account creation with form validation. |
-| **Forgot Password** | `forgot-password`| ✅ | Reset password flow. |
-| **Change Password** | `change-password`| ❌ | In-app secure password update. |
-| **Profile** | `profile` | ✅ | User profile view and details. |
-| **Settings** | `settings` | ✅ | App preferences, dark mode toggles, navigation. |
-| **Onboarding** | `onboarding` | ❌ | Swipeable interactive intro slides. |
-| **FAQ** | `faq` | ✅ | Expandable/collapsible interactive accordion list. |
-| **Privacy Policy** | `privacy-policy` | ✅ | Static dynamic text screen. |
-| **Terms & Cond.** | `terms` | ❌ | Terms of service layout. |
-| **Notifications** | `notifications` | ❌ | List of notifications with unread/read indicators. |
-| **About** | `about` | ❌ | App versioning and direct links. |
+```bash
+# Omit default screens
+npx mobile-app-starter-kit init --skip faq,privacy-policy
 
-> **Pro Tip:** Use `--skip` parameter to omit default screens, e.g., `--skip faq,privacy-policy`.
-
----
-
-## 📁 What does the generated code look like?
-
-<details>
-<summary><b>⚛️ View Expo Structure</b></summary>
-
-\`\`\`
-my-app/
-├── app/                    # Expo Router file-based routes
-│   ├── (auth)/            # Auth screens group
-│   └── (main)/            # Main screens group
-├── src/
-│   ├── api/               # RTK Query API slices + mock data
-│   ├── components/        # Reusable UI (AppButton, AppInput)
-│   ├── features/          # Screen ui and local components
-│   ├── store/             # Global Zustand auth store
-│   └── theme/             # Design Tokens (colors, typography)
-└── package.json
-\`\`\`
-</details>
-
-<details>
-<summary><b>💙 View Flutter Structure</b></summary>
-
-\`\`\`
-my-app/
-├── lib/
-│   ├── core/
-│   │   ├── api/           # Dio client + mock interceptor
-│   │   ├── theme/         # AppColors, AppTheme
-│   │   ├── widgets/       # Reusable components
-│   │   └── router/        # GoRouter configuration
-│   └── features/
-│       └── signin/        # Modular Clean Architecture
-│           ├── data/      #   Repositories
-│           ├── domain/    #   Use Cases
-│           └── presentation/ # UI + Riverpod Controllers
-└── pubspec.yaml
-\`\`\`
-</details>
-
-<details>
-<summary><b>🚀 View KMP Structure</b></summary>
-
-\`\`\`
-my-app/
-├── composeApp/src/commonMain/kotlin/
-│   ├── core/
-│   │   ├── api/           # Ktor client + explicit Result wrapper
-│   │   ├── components/    # Reusable composables
-│   │   ├── theme/         # Material 3 typography and dark colors
-│   │   └── viewmodel/     # Base ViewModel + typed UiState
-│   ├── features/
-│   │   └── signin/        # MVVM separation
-│   │       ├── model/     
-│   │       ├── viewmodel/ #   StateFlow VM
-│   │       └── view/      
-│   ├── navigation/        # Compose Navigation / NavHost
-│   └── di/                # Lightweight manual dependency injection
-└── build.gradle.kts
-\`\`\`
-</details>
-
----
-
-## 🧩 The Mock API Layer
-
-All three frameworks are generated using a consistent mock API configuration.
-
-**Test Credentials for generated apps:**
-- **Email:** `test@example.com`
-- **Password:** `password`
-
-The API simulates network latency (approx ~800ms) to ensure your loading states and shimmer effects look perfect. When your backend is ready, just delete the `MockInterceptor` or `MockData` file and point the base URL to your staging API!
+# List screens or frameworks (add --json for tooling)
+npx mobile-app-starter-kit list screens
+npx mobile-app-starter-kit list frameworks --json
+```
 
 ---
 
 ## 🔧 CLI Reference
 
-### `init`
-Generates a new project.
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--name` | `-n` | Project name (camelCase/kebab-case supported) |
-| `--framework`| `-f` | Framework choice: `expo`, `flutter`, `kmp` |
-| `--screens` | `-s` | Comma-separated screen IDs to explicitly include |
-| `--skip` | | Comma-separated screen IDs to omit |
-| `--package-name`|`-p` | Bundle identifier (e.g., `com.example.app`) |
-| `--output` | `-o` | Specific output directory |
+### `init` (alias: `create`)
+
+| Flag             | Short | Description                                             |
+| ---------------- | ----- | ------------------------------------------------------- |
+| `--name`         | `-n`  | Project name (spaces, hyphens, camelCase all supported) |
+| `--framework`    | `-f`  | `expo`, `flutter`, or `kmp`                             |
+| `--screens`      | `-s`  | Comma-separated screens to include                      |
+| `--skip`         |       | Comma-separated default screens to omit                 |
+| `--package-name` | `-p`  | Bundle identifier (defaults to `com.example.<name>`)    |
+| `--output`       | `-o`  | Output directory (defaults to `./<kebab-name>`)         |
+| `--yes`          | `-y`  | Non-interactive mode with defaults                      |
+| `--force`        |       | Replace a non-empty output directory                    |
+| `--no-install`   |       | Skip `npm install` / `flutter pub get`                  |
+| `--no-git`       |       | Skip `git init`                                         |
+| `--dry-run`      |       | Print the resolved configuration only                   |
+| `--verbose`      |       | Stream install output                                   |
+
+Names are normalised automatically:
+
+| Input         | Folder        | Package                 | Dart package  |
+| ------------- | ------------- | ----------------------- | ------------- |
+| `My Cool App` | `my-cool-app` | `com.example.mycoolapp` | `my_cool_app` |
+
+### `add`
+
+Add screens to an existing generated project (framework auto-detected):
+
+```bash
+cd my-app
+npx mobile-app-starter-kit add --screen notifications,about
+```
 
 ### `list`
-Shows available options.
+
 ```bash
 npx mobile-app-starter-kit list screens
 npx mobile-app-starter-kit list frameworks
 ```
 
----
+> The package also installs a shorter `mask` binary, e.g. `npx mask init`.
 
-## 🤝 Contributing & Community
+### `doctor`
 
-We'd love your help making this tool even better! Whether it's adding a new framework (like React Native Bare or SwiftUI), adding new screen templates, or improving the architecture:
-
-1. Read our [**Contributing Guidelines**](CONTRIBUTING.md) to get started.
-2. Fork the repository.
-3. Make your changes and open a Pull Request!
-
-If you spot a bug or have a feature request, please open an issue!
+Verifies Node, npm, git, Flutter, Java, Xcode, and the Android SDK.
 
 ---
 
+## 📁 Generated structure
 
-## 👨‍💻 Developed By
+<details>
+<summary><b>⚛️ Expo</b></summary>
+
+```
+my-app/
+├── app/                    # Expo Router routes
+│   ├── (auth)/
+│   └── (main)/
+├── src/
+│   ├── api/                # RTK Query mock API
+│   ├── components/         # Themed UI primitives
+│   ├── features/           # Screen implementations
+│   ├── store/              # Zustand auth (SecureStore-backed)
+│   └── theme/              # Light/dark palettes + ThemeProvider
+├── assets/images/          # App icon + splash assets
+├── .gitignore
+└── README.md
+```
+
+</details>
+
+<details>
+<summary><b>💙 Flutter</b></summary>
+
+```
+my-app/
+├── lib/
+│   ├── core/
+│   │   ├── api/            # Dio client + mock interceptor
+│   │   ├── auth/           # Persisted auth state
+│   │   ├── theme/          # Material 3 themes + mode provider
+│   │   ├── widgets/        # AppButton/AppInput/AppCard
+│   │   └── router/         # GoRouter configuration
+│   └── features/
+│       └── signin/
+│           ├── data/
+│           └── presentation/
+├── android/                # applicationId matches --package-name
+├── ios/                    # bundle id matches --package-name
+└── README.md
+```
+
+</details>
+
+<details>
+<summary><b>🚀 Kotlin Multiplatform</b></summary>
+
+```
+my-app/
+├── composeApp/src/
+│   ├── commonMain/kotlin/
+│   │   ├── core/           # Theme, components, API, ViewModel base
+│   │   ├── features/       # MVVM feature modules
+│   │   ├── navigation/     # Type-safe Compose Navigation
+│   │   └── di/             # ViewModel factories
+│   └── iosMain/kotlin/     # Compose UIViewController
+├── androidApp/             # Android entry point
+├── iosApp/                 # Swift app + XcodeGen project.yml
+├── gradle/wrapper/         # Gradle wrapper (included)
+└── README.md
+```
+
+</details>
+
+---
+
+## 🧩 Mock API
+
+All frameworks ship with the same demo credentials:
+
+- **Email:** `test@example.com`
+- **Password:** `password`
+
+The mock layer simulates ~800 ms of latency so loading states are visible.
+
+| Framework | Location                               | Replace with                      |
+| --------- | -------------------------------------- | --------------------------------- |
+| Expo      | `src/api/apiSlice.ts` + `mockData.ts`  | `fetchBaseQuery` against your API |
+| Flutter   | `lib/core/api/mock_interceptor.dart`   | Remove interceptor, set `baseUrl` |
+| KMP       | `composeApp/.../core/api/ApiClient.kt` | Ktor `HttpClient` calls           |
+
+---
+
+## ✅ Verification performed by CI
+
+Every pull request:
+
+1. Builds the TypeScript CLI and runs unit + generation tests.
+2. Generates a project for each framework.
+3. Runs `tsc --noEmit` and `expo prebuild` for Expo.
+4. Runs `flutter pub get` and `flutter analyze` for Flutter.
+5. Runs `./gradlew :androidApp:assembleDebug` for KMP.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Read [CONTRIBUTING.md](CONTRIBUTING.md), fork the repo, and open a pull request.
+
+If you find a bug or have a feature request, please [open an issue](https://github.com/piashcse/mobile-app-starter-kit/issues).
+
+---
+
+## 👨‍💻 Author
 
 <a href="https://twitter.com/piashcse" target="_blank">
   <img src="https://avatars.githubusercontent.com/piashcse" width="80" align="left">
@@ -205,33 +288,9 @@ If you spot a bug or have a feature request, please open an issue!
 
 [![Twitter](https://img.shields.io/badge/-Twitter-1DA1F2?logo=x&logoColor=white&style=for-the-badge)](https://twitter.com/piashcse)
 [![Medium](https://img.shields.io/badge/-Medium-00AB6C?logo=medium&logoColor=white&style=for-the-badge)](https://medium.com/@piashcse)
-[![Linkedin](https://img.shields.io/badge/-LinkedIn-0077B5?logo=linkedin&logoColor=white&style=for-the-badge)](https://www.linkedin.com/in/piashcse/)
+[![LinkedIn](https://img.shields.io/badge/-LinkedIn-0077B5?logo=linkedin&logoColor=white&style=for-the-badge)](https://www.linkedin.com/in/piashcse/)
 [![Web](https://img.shields.io/badge/-Web-0073E6?logo=appveyor&logoColor=white&style=for-the-badge)](https://piashcse.github.io/)
-[![Blog](https://img.shields.io/badge/-Blog-0077B5?logo=readme&logoColor=white&style=for-the-badge)](https://piashcse.blogspot.com)
 
 ## License
 
-```
-MIT License
-
-Copyright (c) 2025 Mehedi Hassan Piash
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
-
+MIT — see [LICENSE](LICENSE).

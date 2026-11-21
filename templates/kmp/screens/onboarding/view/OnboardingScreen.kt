@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import core.components.AppButton
 import core.components.AppGhostButton
-import core.theme.AppColors
 import kotlinx.coroutines.launch
 
 private data class Slide(val emoji: String, val title: String, val desc: String)
@@ -43,9 +42,9 @@ fun OnboardingScreen(onFinish: () -> Unit = {}) {
             ) {
                 Text(slides[page].emoji, style = MaterialTheme.typography.displayLarge)
                 Spacer(Modifier.height(32.dp))
-                Text(slides[page].title, style = MaterialTheme.typography.headlineLarge, color = AppColors.TextPrimary)
+                Text(slides[page].title, style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground)
                 Spacer(Modifier.height(16.dp))
-                Text(slides[page].desc, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary)
+                Text(slides[page].desc, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
 
@@ -55,7 +54,7 @@ fun OnboardingScreen(onFinish: () -> Unit = {}) {
                 Surface(
                     modifier = Modifier.padding(horizontal = 4.dp).size(if (pagerState.currentPage == i) 24.dp else 8.dp, 8.dp),
                     shape = RoundedCornerShape(4.dp),
-                    color = if (pagerState.currentPage == i) AppColors.Primary else AppColors.SurfaceLight,
+                    color = if (pagerState.currentPage == i) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                 ) {}
             }
         }

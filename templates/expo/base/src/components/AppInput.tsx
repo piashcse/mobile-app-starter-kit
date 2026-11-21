@@ -3,11 +3,12 @@ import {
   TextInput,
   View,
   Text,
-  StyleSheet,
+  StyleProp,
   ViewStyle,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
-import { colors } from '../theme/colors';
+import { makeStyles } from '../theme';
 import { typography } from '../theme/typography';
 import { borderRadius, spacing } from '../theme/spacing';
 
@@ -20,11 +21,13 @@ interface AppInputProps {
   error?: string;
   keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   multiline?: boolean;
   numberOfLines?: number;
   editable?: boolean;
   icon?: React.ReactNode;
+  showPasswordLabel?: string;
+  hidePasswordLabel?: string;
 }
 
 export const AppInput: React.FC<AppInputProps> = ({
@@ -41,7 +44,10 @@ export const AppInput: React.FC<AppInputProps> = ({
   numberOfLines = 1,
   editable = true,
   icon,
+  showPasswordLabel = 'Show',
+  hidePasswordLabel = 'Hide',
 }) => {
+  const styles = useStyles();
   const [isFocused, setIsFocused] = useState(false);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -62,7 +68,7 @@ export const AppInput: React.FC<AppInputProps> = ({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={styles.placeholder.color}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
@@ -77,8 +83,13 @@ export const AppInput: React.FC<AppInputProps> = ({
             onPress={() => setIsPasswordVisible(!isPasswordVisible)}
             style={styles.toggleButton}
           >
-            <Text style={styles.toggleText}>
-              {isPasswordVisible ? 'Hide' : 'Show'}
+            <Text
+              style={styles.toggleText}
+              accessibilityLabel={
+                isPasswordVisible ? hidePasswordLabel : showPasswordLabel
+              }
+            >
+              {isPasswordVisible ? hidePasswordLabel : showPasswordLabel}
             </Text>
           </TouchableOpacity>
         )}
@@ -88,10 +99,8 @@ export const AppInput: React.FC<AppInputProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.md,
-  },
+const useStyles = makeStyles((colors) => StyleSheet.create({
+  container: { marginBottom: spacing.md },
   label: {
     ...typography.label,
     color: colors.textSecondary,
@@ -110,28 +119,18 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
     backgroundColor: colors.surfaceLight + '20',
   },
-  inputError: {
-    borderColor: colors.error,
-  },
-  inputDisabled: {
-    opacity: 0.6,
-  },
-  iconContainer: {
-    marginRight: spacing.sm,
-  },
+  inputError: { borderColor: colors.error },
+  inputDisabled: { opacity: 0.6 },
+  iconContainer: { marginRight: spacing.sm },
   input: {
     flex: 1,
     ...typography.body,
     color: colors.textPrimary,
     paddingVertical: spacing.md - 2,
   },
-  multiline: {
-    minHeight: 100,
-    textAlignVertical: 'top',
-  },
-  toggleButton: {
-    paddingLeft: spacing.sm,
-  },
+  placeholder: { color: colors.textMuted },
+  multiline: { minHeight: 100, textAlignVertical: 'top' },
+  toggleButton: { paddingLeft: spacing.sm },
   toggleText: {
     ...typography.caption,
     color: colors.primary,
@@ -142,4 +141,4 @@ const styles = StyleSheet.create({
     color: colors.error,
     marginTop: spacing.xs,
   },
-});
+}));

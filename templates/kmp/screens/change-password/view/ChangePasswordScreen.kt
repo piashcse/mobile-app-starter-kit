@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import core.components.AppButton
 import core.components.AppInput
-import core.theme.AppColors
 
 @Composable
 fun ChangePasswordScreen(onSuccess: () -> Unit = {}) {
@@ -23,7 +22,7 @@ fun ChangePasswordScreen(onSuccess: () -> Unit = {}) {
     ) {
         Text("🔑", style = MaterialTheme.typography.displayLarge)
         Spacer(Modifier.height(16.dp))
-        Text("Change Password", style = MaterialTheme.typography.headlineMedium, color = AppColors.TextPrimary)
+        Text("Change Password", style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.height(32.dp))
 
         AppInput(value = current, onValueChange = { current = it }, label = "Current Password", isPassword = true)

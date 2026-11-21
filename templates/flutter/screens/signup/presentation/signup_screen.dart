@@ -4,14 +4,14 @@ import 'package:go_router/go_router.dart';
 import '../../../core/widgets/widgets.dart';
 import 'signup_controller.dart';
 
-class SignupScreen extends ConsumerStatefulWidget {
-  const SignupScreen({super.key});
+class SignUpScreen extends ConsumerStatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  ConsumerState<SignupScreen> createState() => _SignupScreenState();
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignupScreenState extends ConsumerState<SignupScreen> {
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -38,7 +38,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Account created! Please sign in.')),
       );
-      context.pop();
+      context.go('{{onboardingPath}}');
     }
   }
 

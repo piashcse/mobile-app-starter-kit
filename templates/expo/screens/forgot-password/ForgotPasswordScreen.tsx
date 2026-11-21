@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppButton, AppInput } from '../../components';
-import { colors, typography, spacing } from '../../theme';
+import { makeStyles, typography, spacing } from '../../theme';
 import { useForgotPasswordMutation } from '../../api/apiSlice';
 
 export default function ForgotPasswordScreen() {
+  const styles = useStyles();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -73,7 +74,7 @@ export default function ForgotPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: 'center',
@@ -92,4 +93,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   form: { gap: spacing.md },
-});
+}));

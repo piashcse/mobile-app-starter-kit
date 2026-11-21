@@ -10,7 +10,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import core.theme.AppColors
 
 @Composable
 fun AppInput(
@@ -20,6 +19,8 @@ fun AppInput(
     label: String? = null,
     placeholder: String? = null,
     isPassword: Boolean = false,
+    showPasswordLabel: String = "Show",
+    hidePasswordLabel: String = "Hide",
     error: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     enabled: Boolean = true,
@@ -32,7 +33,7 @@ fun AppInput(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = AppColors.TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 6.dp),
             )
         }
@@ -41,7 +42,7 @@ fun AppInput(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            placeholder = placeholder?.let { { Text(it, color = AppColors.TextMuted) } },
+            placeholder = placeholder?.let { { Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
             isError = error != null,
             enabled = enabled,
             singleLine = singleLine,
@@ -55,8 +56,8 @@ fun AppInput(
                 {
                     TextButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                         Text(
-                            if (isPasswordVisible) "Hide" else "Show",
-                            color = AppColors.Primary,
+                            if (isPasswordVisible) hidePasswordLabel else showPasswordLabel,
+                            color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -64,21 +65,21 @@ fun AppInput(
             } else null,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = AppColors.Primary,
-                unfocusedBorderColor = AppColors.Border,
-                errorBorderColor = AppColors.Error,
-                focusedContainerColor = AppColors.Surface,
-                unfocusedContainerColor = AppColors.Surface,
-                cursorColor = AppColors.Primary,
-                focusedTextColor = AppColors.TextPrimary,
-                unfocusedTextColor = AppColors.TextPrimary,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                cursorColor = MaterialTheme.colorScheme.primary,
+                focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
             ),
         )
 
         if (error != null) {
             Text(
                 text = error,
-                color = AppColors.Error,
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 4.dp, start = 4.dp),
             )

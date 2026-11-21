@@ -8,11 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import core.api.MockData
-import core.theme.AppColors
 
 @Composable
 fun TermsScreen() {
     Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp)) {
-        Text(MockData.terms, style = MaterialTheme.typography.bodyMedium, color = AppColors.TextSecondary, lineHeight = MaterialTheme.typography.bodyLarge.lineHeight)
+        Text(MockData.terms, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, lineHeight = MaterialTheme.typography.bodyLarge.lineHeight)
     }
 }

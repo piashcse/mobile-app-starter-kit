@@ -1,6 +1,6 @@
 {
   "name": "mobile-app-starter-kit",
-  "version": "1.0.2",
+  "version": "2.1.0",
   "description": "CLI tool to generate production-ready mobile app boilerplate for Expo React Native, Flutter, and KMP with selectable screens and best-practice architecture.",
   "main": "dist/index.js",
   "type": "module",
@@ -8,12 +8,19 @@
     "mobile-app-starter-kit": "dist/index.js",
     "mask": "dist/index.js"
   },
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "prepublishOnly": "npm run build"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.ts\" \"*.{json,md}\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "prepublishOnly": "npm run build && npm test"
   },
   "keywords": [
     "mobile",
@@ -28,30 +35,38 @@
     "scaffold",
     "generator"
   ],
-  "author": "",
+  "author": "Mehedi Hassan Piash",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/piashcse/mobile-app-starter-kit.git"
   },
+  "bugs": {
+    "url": "https://github.com/piashcse/mobile-app-starter-kit/issues"
+  },
+  "homepage": "https://github.com/piashcse/mobile-app-starter-kit#readme",
   "files": [
     "dist",
-    "templates"
+    "templates",
+    "CHANGELOG.md"
   ],
   "dependencies": {
-    "chalk": "^5.4.1",
-    "commander": "^13.1.0",
-    "fs-extra": "^11.3.0",
-    "glob": "^11.0.2",
-    "handlebars": "^4.7.8",
-    "inquirer": "^12.5.0",
-    "ora": "^8.2.0",
-    "typescript": "^5.8.2"
+    "chalk": "^6.0.1",
+    "commander": "^15.1.0",
+    "fs-extra": "^11.4.1",
+    "handlebars": "^4.7.10",
+    "inquirer": "^14.3.0",
+    "ora": "^10.0.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/inquirer": "^9.0.7",
-    "@types/node": "^22.14.0",
-    "tsx": "^4.19.3"
+    "@types/node": "^26.0.0",
+    "prettier": "^3.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.1"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

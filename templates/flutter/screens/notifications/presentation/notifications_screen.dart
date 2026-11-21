@@ -27,7 +27,7 @@ class NotificationsScreen extends StatelessWidget {
           return Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
               border: isRead ? null : const Border(left: BorderSide(color: AppColors.primary, width: 3)),
             ),

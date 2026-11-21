@@ -10,14 +10,14 @@ import androidx.compose.ui.unit.dp
 import core.components.AppButton
 import core.components.AppGhostButton
 import core.components.AppInput
-import core.theme.AppColors
 import core.viewmodel.UiState
 import features.forgotpassword.viewmodel.ForgotPasswordViewModel
 import di.ViewModelProvider
 
 @Composable
 fun ForgotPasswordScreen(onBack: () -> Unit = {}) {
-    val viewModel = remember { ViewModelProvider.forgotPasswordViewModel }
+    val viewModel = remember { ViewModelProvider.forgotPasswordViewModel() }
+    DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val email by viewModel.email.collectAsState()
     val state by viewModel.state.collectAsState()
 
@@ -28,9 +28,9 @@ fun ForgotPasswordScreen(onBack: () -> Unit = {}) {
     ) {
         Text("🔐", style = MaterialTheme.typography.displayLarge)
         Spacer(Modifier.height(16.dp))
-        Text("Forgot Password?", style = MaterialTheme.typography.headlineLarge, color = AppColors.TextPrimary)
+        Text("Forgot Password?", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.height(8.dp))
-        Text("Enter your email to receive a reset link.", color = AppColors.TextSecondary)
+        Text("Enter your email to receive a reset link.", color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(32.dp))
 
         AppInput(value = email, onValueChange = viewModel::updateEmail, label = "Email", placeholder = "Enter your email", keyboardType = KeyboardType.Email)

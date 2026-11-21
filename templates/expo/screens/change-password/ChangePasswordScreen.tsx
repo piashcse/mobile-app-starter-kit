@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppButton, AppInput } from '../../components';
-import { colors, typography, spacing } from '../../theme';
+import { makeStyles, typography, spacing } from '../../theme';
 import { useChangePasswordMutation } from '../../api/apiSlice';
 
 export default function ChangePasswordScreen() {
+  const styles = useStyles();
   const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -87,11 +88,11 @@ export default function ChangePasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => StyleSheet.create({
   scrollContent: { flexGrow: 1, justifyContent: 'center', padding: spacing.lg },
   header: { alignItems: 'center', marginBottom: spacing.xl },
   emoji: { fontSize: 48, marginBottom: spacing.md },
   title: { ...typography.h2, color: colors.textPrimary },
   subtitle: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs },
   form: { gap: spacing.sm },
-});
+}));

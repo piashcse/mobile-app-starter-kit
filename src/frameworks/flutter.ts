@@ -1,8 +1,14 @@
 import path from 'path';
 import fs from 'fs-extra';
+import { spawnSync } from 'child_process';
 import type { ProjectConfig } from '../config.js';
-import { getTemplatesDir, copyTemplateDir, screenIdToCases } from '../utils/file.js';
+import {
+  getTemplatesDir,
+  copyTemplateDir,
+  screenIdToCases,
+} from '../utils/file.js';
 import { logger } from '../utils/logger.js';
+import { writeFlutterDesign } from '../design/generate.js';
 
 export async function generateFlutterProject(
   config: ProjectConfig,
@@ -12,82 +18,222 @@ export async function generateFlutterProject(
   const baseDir = path.join(templatesDir, 'flutter', 'base');
   const screensDir = path.join(templatesDir, 'flutter', 'screens');
 
-  // Step 0: Run flutter create for latest native folders
+  const dartPackage = String(context.dartPackage);
+  const appTitle = String(context.appTitle);
+
+  // Step 1: Generate native Flutter project
   logger.step(1, 5, 'Generating native Flutter project...');
-  try {
-    const { execSync } = await import('child_process');
-    
-    // Check if flutter is available
-    try {
-      execSync('flutter --version', { stdio: 'ignore' });
-    } catch (e) {
-      throw new Error('Flutter SDK not found in PATH');
-    }
+  const nativeReady = await runFlutterCreate(config, dartPackage, appTitle);
 
-    const projectName = config.name.toLowerCase().replace(/[^a-z0-9_]/g, '_');
-    
-    // Create project in a temporary sub-directory first to avoid cluttering if it fails
-    // or just run it in situ. We'll run it in situ as it's meant to be.
-    execSync(`flutter create --org ${config.packageName.split('.').slice(0, -1).join('.')} --project-name ${projectName} --platforms android,ios .`, {
-      cwd: config.outputDir,
-      stdio: 'ignore', // Keep it quiet
-    });
-    
-    // Clean up default files that we will replace
-    await fs.remove(path.join(config.outputDir, 'lib'));
-    await fs.remove(path.join(config.outputDir, 'test'));
-    await fs.remove(path.join(config.outputDir, 'pubspec.yaml'));
-    logger.success('Native folders generated successfully.');
-  } catch (error) {
-    logger.warn('Flutter native generation failed. Make sure Flutter SDK is installed.');
-    logger.info('Falling back to a basic structure...');
-    
-    // Manual fallback for android/ios folders
-    await fs.ensureDir(path.join(config.outputDir, 'android'));
-    await fs.ensureDir(path.join(config.outputDir, 'ios'));
-    
-    // Basic Android structure
-    const androidAppDir = path.join(config.outputDir, 'android', 'app');
-    await fs.ensureDir(path.join(androidAppDir, 'src', 'main'));
-    await fs.writeFile(path.join(androidAppDir, 'build.gradle'), '// Basic Flutter android build.gradle\n');
-    
-    // Basic iOS structure
-    const iosRunnerDir = path.join(config.outputDir, 'ios', 'Runner');
-    await fs.ensureDir(iosRunnerDir);
-    await fs.writeFile(path.join(iosRunnerDir, 'Info.plist'), '<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0"></plist>\n');
-    
-    logger.success('Basic native structure created as fallback.');
-  }
-
-  // Step 1: Copy base template
+  // Step 2: Copy base template
   logger.step(2, 5, 'Applying base template...');
   await copyTemplateDir(baseDir, config.outputDir, context);
+  await writeFlutterDesign(config.outputDir);
 
-  // Step 2: Copy selected screen features (Clean Architecture)
+  // Step 3: Copy selected screen features (Clean Architecture)
   logger.step(3, 5, 'Adding selected features...');
   for (const screenId of config.screens) {
     const screenSrcDir = path.join(screensDir, screenId);
-    if (await fs.pathExists(screenSrcDir)) {
-      const screenDestDir = path.join(
-        config.outputDir,
-        'lib',
-        'features',
-        screenId.replace(/-/g, '_')
+    if (!(await fs.pathExists(screenSrcDir))) {
+      throw new Error(
+        `Missing Flutter template for screen "${screenId}" (${screenSrcDir}).`
       );
-      await copyTemplateDir(screenSrcDir, screenDestDir, {
-        ...context,
-        ...screenIdToCases(screenId),
-      });
     }
+    const screenDestDir = path.join(
+      config.outputDir,
+      'lib',
+      'features',
+      screenId.replace(/-/g, '_')
+    );
+    await copyTemplateDir(screenSrcDir, screenDestDir, {
+      ...context,
+      ...screenIdToCases(screenId),
+    });
   }
 
-  // Step 3: Generate GoRouter routes
+  // Step 4: Generate GoRouter routes
   logger.step(4, 5, 'Generating routes...');
   await generateFlutterRoutes(config, context);
 
-  // Step 4: Generate provider registrations
+  // Step 5: Generate provider registrations
   logger.step(5, 5, 'Setting up Riverpod providers...');
-  await generateFlutterProviders(config, context);
+  await generateFlutterProviders(config);
+
+  if (!nativeReady) {
+    logger.warn(
+      'Flutter SDK was not found, so android/ and ios/ were not generated.\n' +
+        'Install Flutter, then run "flutter create ." inside the project.'
+    );
+  }
+}
+
+async function runFlutterCreate(
+  config: ProjectConfig,
+  dartPackage: string,
+  appTitle: string
+): Promise<boolean> {
+  const version = spawnSync('flutter', ['--version'], {
+    stdio: 'pipe',
+    shell: process.platform === 'win32',
+  });
+
+  if (version.error || version.status !== 0) {
+    return false;
+  }
+
+  const org =
+    config.packageName.split('.').slice(0, -1).join('.') || 'com.example';
+  const result = spawnSync(
+    'flutter',
+    [
+      'create',
+      '--org',
+      org,
+      '--project-name',
+      dartPackage,
+      '--platforms',
+      'android,ios',
+      '--description',
+      `${appTitle} — generated by Mobile App Starter Kit`,
+      '.',
+    ],
+    {
+      cwd: config.outputDir,
+      stdio: 'pipe',
+      encoding: 'utf-8',
+      shell: process.platform === 'win32',
+    }
+  );
+
+  if (result.status !== 0) {
+    logger.warn(
+      `flutter create failed: ${(result.stderr || result.stdout || '').trim()}`
+    );
+    return false;
+  }
+
+  // Replace the generated Dart app with our template.
+  await fs.remove(path.join(config.outputDir, 'lib'));
+  await fs.remove(path.join(config.outputDir, 'test'));
+  await fs.remove(path.join(config.outputDir, 'pubspec.yaml'));
+  await fs.remove(path.join(config.outputDir, '.idea'));
+  await fs.remove(path.join(config.outputDir, 'pubspec.lock'));
+  await fs.remove(path.join(config.outputDir, '.dart_tool'));
+
+  // Remove IDE files created by flutter create.
+  await removeImlFiles(config.outputDir);
+
+  await patchAndroidPackage(config);
+  await patchIosBundleId(config);
+
+  return true;
+}
+
+/** Make the Android applicationId/namespace exactly match --package-name. */
+async function patchAndroidPackage(config: ProjectConfig): Promise<void> {
+  const androidDir = path.join(config.outputDir, 'android');
+  if (!(await fs.pathExists(androidDir))) return;
+
+  const gradlePath = path.join(androidDir, 'app', 'build.gradle.kts');
+  if (await fs.pathExists(gradlePath)) {
+    let gradle = await fs.readFile(gradlePath, 'utf-8');
+    gradle = gradle.replace(
+      /namespace\s*=\s*"[^"]*"/g,
+      `namespace = "${config.packageName}"`
+    );
+    gradle = gradle.replace(
+      /applicationId\s*=\s*"[^"]*"/g,
+      `applicationId = "${config.packageName}"`
+    );
+    await fs.writeFile(gradlePath, gradle, 'utf-8');
+  }
+
+  // Move MainActivity.kt into the directory matching the package name.
+  const kotlinRoot = path.join(androidDir, 'app', 'src', 'main', 'kotlin');
+  if (!(await fs.pathExists(kotlinRoot))) return;
+
+  const mainActivity = await findFile(kotlinRoot, 'MainActivity.kt');
+  if (!mainActivity) return;
+
+  let content = await fs.readFile(mainActivity, 'utf-8');
+  content = content.replace(
+    /^package\s+[^\n]+/m,
+    `package ${config.packageName}`
+  );
+  const targetDir = path.join(kotlinRoot, ...config.packageName.split('.'));
+  await fs.ensureDir(targetDir);
+  await fs.writeFile(path.join(targetDir, 'MainActivity.kt'), content, 'utf-8');
+
+  if (
+    path.resolve(mainActivity) !== path.resolve(targetDir, 'MainActivity.kt')
+  ) {
+    await fs.remove(mainActivity);
+  }
+  // Clean up the now-empty old package directories.
+  await removeEmptyDirs(kotlinRoot);
+}
+
+/** Make the iOS bundle identifier match --package-name. */
+async function patchIosBundleId(config: ProjectConfig): Promise<void> {
+  const pbxproj = path.join(
+    config.outputDir,
+    'ios',
+    'Runner.xcodeproj',
+    'project.pbxproj'
+  );
+  if (!(await fs.pathExists(pbxproj))) return;
+
+  const content = await fs.readFile(pbxproj, 'utf-8');
+  const patched = content.replace(
+    /PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/g,
+    (_match, value: string) => {
+      const suffix = value.trim().endsWith('.RunnerTests')
+        ? '.RunnerTests'
+        : '';
+      return `PRODUCT_BUNDLE_IDENTIFIER = ${config.packageName}${suffix};`;
+    }
+  );
+  await fs.writeFile(pbxproj, patched, 'utf-8');
+}
+
+async function removeImlFiles(dir: string): Promise<void> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await removeImlFiles(fullPath);
+    } else if (entry.name.endsWith('.iml')) {
+      await fs.remove(fullPath);
+    }
+  }
+}
+
+async function findFile(dir: string, name: string): Promise<string | null> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      const nested = await findFile(fullPath, name);
+      if (nested) return nested;
+    } else if (entry.name === name) {
+      return fullPath;
+    }
+  }
+  return null;
+}
+
+async function removeEmptyDirs(dir: string, root = dir): Promise<void> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      await removeEmptyDirs(path.join(dir, entry.name), root);
+    }
+  }
+  if (path.resolve(dir) === path.resolve(root)) return;
+  const remaining = await fs.readdir(dir);
+  if (remaining.length === 0) {
+    await fs.remove(dir);
+  }
 }
 
 async function generateFlutterRoutes(
@@ -114,48 +260,55 @@ async function generateFlutterRoutes(
       ),`);
   }
 
-  // Improved start destination logic
-  let initialLocation = '/signin';
-  if (config.screens.includes('onboarding')) {
-    initialLocation = '/onboarding';
-  } else if (config.screens.includes('signin')) {
-    initialLocation = '/signin';
-  } else if (config.screens.length > 0) {
-    initialLocation = `/${config.screens[0]}`;
-  }
+  const initial = String(context.initialPath ?? '/signin');
 
   const routerContent = `import 'package:go_router/go_router.dart';
 ${imports.join('\n')}
 
 final appRouter = GoRouter(
-  initialLocation: '${initialLocation}',
+  initialLocation: '${initial}',
   routes: [
 ${routes.join('\n')}
   ],
 );
 `;
 
-  await fs.writeFile(path.join(routerDir, 'app_router.dart'), routerContent);
+  await fs.writeFile(
+    path.join(routerDir, 'app_router.dart'),
+    routerContent,
+    'utf-8'
+  );
 }
 
-async function generateFlutterProviders(
-  config: ProjectConfig,
-  _context: Record<string, unknown>
-): Promise<void> {
-  // Providers are already inside each feature folder with Clean Architecture
-  // This generates the central providers barrel file if needed
+async function generateFlutterProviders(config: ProjectConfig): Promise<void> {
   const diDir = path.join(config.outputDir, 'lib', 'core', 'di');
   await fs.ensureDir(diDir);
 
   const exports: string[] = [];
   for (const screenId of config.screens) {
     const snakeId = screenId.replace(/-/g, '_');
-    exports.push(`export '../../features/${snakeId}/presentation/${snakeId}_controller.dart';`);
+    const controller = path.join(
+      config.outputDir,
+      'lib',
+      'features',
+      snakeId,
+      'presentation',
+      `${snakeId}_controller.dart`
+    );
+    if (await fs.pathExists(controller)) {
+      exports.push(
+        `export '../../features/${snakeId}/presentation/${snakeId}_controller.dart';`
+      );
+    }
   }
 
   const barrelContent = `// Barrel file for all feature controllers/providers
 ${exports.join('\n')}
 `;
 
-  await fs.writeFile(path.join(diDir, 'providers.dart'), barrelContent);
+  await fs.writeFile(
+    path.join(diDir, 'providers.dart'),
+    barrelContent,
+    'utf-8'
+  );
 }

@@ -1,0 +1,60 @@
+name: Bug report
+description: Report a problem with the CLI or a generated project
+title: '[Bug]: '
+labels: ['bug', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please include enough detail for us to reproduce it.
+  - type: input
+    id: cli-version
+    attributes:
+      label: CLI version
+      description: Output of `npx mobile-app-starter-kit --version`
+    validations:
+      required: true
+  - type: dropdown
+    id: framework
+    attributes:
+      label: Framework
+      options:
+        - Expo React Native
+        - Flutter
+        - Kotlin Multiplatform
+        - CLI itself
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command used
+      placeholder: npx mobile-app-starter-kit init --name MyApp --framework expo --yes
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead?
+      description: Paste the error output here.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, Flutter/JDK/Xcode versions as relevant
+      placeholder: macOS 26, Node 24, Flutter 3.50, JDK 21, Xcode 27
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues for a duplicate
+          required: true

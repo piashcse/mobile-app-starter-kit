@@ -1,8 +1,25 @@
 import path from 'path';
 import fs from 'fs-extra';
 import type { ProjectConfig } from '../config.js';
-import { getTemplatesDir, copyTemplateDir, screenIdToCases } from '../utils/file.js';
+import {
+  getTemplatesDir,
+  copyTemplateDir,
+  screenIdToCases,
+} from '../utils/file.js';
 import { logger } from '../utils/logger.js';
+import { writeKmpDesign } from '../design/generate.js';
+
+const KOTLIN_VERSION = '2.4.21';
+const COMPOSE_VERSION = '1.11.1';
+const AGP_VERSION = '8.13.2';
+const KTOR_VERSION = '3.6.1';
+const NAVIGATION_VERSION = '2.9.0';
+const COROUTINES_VERSION = '1.11.0';
+const SERIALIZATION_VERSION = '1.13.0';
+const ACTIVITY_COMPOSE_VERSION = '1.12.4';
+const COMPILE_SDK = '36';
+const MIN_SDK = '24';
+const TARGET_SDK = '36';
 
 export async function generateKmpProject(
   config: ProjectConfig,
@@ -12,85 +29,143 @@ export async function generateKmpProject(
   const baseDir = path.join(templatesDir, 'kmp', 'base');
   const screensDir = path.join(templatesDir, 'kmp', 'screens');
 
-  // Step 1: Copy base template (Common code only)
+  // Step 1: Copy shared code and Gradle wrapper
   logger.step(1, 5, 'Copying shared KMP code...');
   await copyTemplateDir(baseDir, config.outputDir, context);
+  await writeKmpDesign(config.outputDir);
 
-  // Step 2: Generate native files at runtime
-  logger.step(2, 5, 'Generating native platform files...');
+  // Step 2: Generate Gradle build files and native entry points
+  logger.step(2, 5, 'Generating Gradle build files...');
+  await generateKmpBuildFiles(config, context);
   await generateKmpNativeFiles(config, context);
 
   // Step 3: Copy selected screen modules (MVVM)
   logger.step(3, 5, 'Adding selected features...');
   for (const screenId of config.screens) {
     const screenSrcDir = path.join(screensDir, screenId);
-    if (await fs.pathExists(screenSrcDir)) {
-      const screenDestDir = path.join(
-        config.outputDir,
-        'composeApp',
-        'src',
-        'commonMain',
-        'kotlin',
-        'features',
-        screenId.replace(/-/g, '')
+    if (!(await fs.pathExists(screenSrcDir))) {
+      throw new Error(
+        `Missing KMP template for screen "${screenId}" (${screenSrcDir}).`
       );
-      await copyTemplateDir(screenSrcDir, screenDestDir, {
-        ...context,
-        ...screenIdToCases(screenId),
-      });
     }
+    const screenDestDir = path.join(
+      config.outputDir,
+      'composeApp',
+      'src',
+      'commonMain',
+      'kotlin',
+      'features',
+      screenId.replace(/-/g, '')
+    );
+    await copyTemplateDir(screenSrcDir, screenDestDir, {
+      ...context,
+      ...screenIdToCases(screenId),
+    });
   }
 
   // Step 4: Generate navigation graph
   logger.step(4, 5, 'Generating navigation...');
   await generateKmpNavigation(config, context);
 
-  // Step 5: Generate ViewModel registrations
+  // Step 5: Generate ViewModel factories
   logger.step(5, 5, 'Setting up ViewModels...');
-  await generateKmpViewModels(config, context);
+  await generateKmpViewModels(config);
+
+  // Gradle wrapper scripts must be executable on Unix.
+  if (process.platform !== 'win32') {
+    const gradlew = path.join(config.outputDir, 'gradlew');
+    if (await fs.pathExists(gradlew)) {
+      await fs.chmod(gradlew, 0o755);
+    }
+  }
 }
 
-async function generateKmpNativeFiles(
+async function generateKmpBuildFiles(
   config: ProjectConfig,
-  _context: Record<string, unknown>
+  context: Record<string, unknown>
 ): Promise<void> {
   const outputDir = config.outputDir;
+  const projectName = String(context.projectName);
+  const packageName = config.packageName;
 
-  // 1. Root Gradle Files
-  const buildGradle = `plugins {
-    alias(libs.plugins.androidApplication).apply(false)
-    alias(libs.plugins.androidLibrary).apply(false)
-    alias(libs.plugins.composeMultiplatform).apply(false)
-    alias(libs.plugins.composeCompiler).apply(false)
-    alias(libs.plugins.kotlinMultiplatform).apply(false)
-    alias(libs.plugins.kotlinSerialization).apply(false)
+  const rootBuildGradle = `plugins {
+    alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidLibrary) apply false
+    alias(libs.plugins.composeMultiplatform) apply false
+    alias(libs.plugins.composeCompiler) apply false
+    alias(libs.plugins.kotlinMultiplatform) apply false
+    alias(libs.plugins.kotlinAndroid) apply false
+    alias(libs.plugins.kotlinSerialization) apply false
 }
 `;
-  await fs.writeFile(path.join(outputDir, 'build.gradle.kts'), buildGradle);
+  await fs.writeFile(
+    path.join(outputDir, 'build.gradle.kts'),
+    rootBuildGradle,
+    'utf-8'
+  );
 
-  const settingsGradle = `rootProject.name = "${config.name}"
+  const settingsGradle = `pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.name = "${projectName}"
+
 include(":composeApp")
 include(":androidApp")
 `;
-  await fs.writeFile(path.join(outputDir, 'settings.gradle.kts'), settingsGradle);
+  await fs.writeFile(
+    path.join(outputDir, 'settings.gradle.kts'),
+    settingsGradle,
+    'utf-8'
+  );
 
-  // 2. Gradle Version Catalog
+  const gradleProperties = `org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8
+org.gradle.caching=true
+org.gradle.parallel=true
+android.useAndroidX=true
+android.nonTransitiveRClass=true
+kotlin.code.style=official
+`;
+  await fs.writeFile(
+    path.join(outputDir, 'gradle.properties'),
+    gradleProperties,
+    'utf-8'
+  );
+
   const libsVersions = `[versions]
-agp = "8.2.2"
-android-compileSdk = "34"
-android-minSdk = "24"
-android-targetSdk = "34"
-androidx-activityCompose = "1.8.2"
-compose-multiplatform = "1.6.11"
-kotlin = "2.0.0"
-ktor = "2.3.11"
-navigation-compose = "2.8.0-alpha08"
+agp = "${AGP_VERSION}"
+kotlin = "${KOTLIN_VERSION}"
+compose-multiplatform = "${COMPOSE_VERSION}"
+ktor = "${KTOR_VERSION}"
+navigation-compose = "${NAVIGATION_VERSION}"
+kotlinx-coroutines = "${COROUTINES_VERSION}"
+kotlinx-serialization = "${SERIALIZATION_VERSION}"
+android-compileSdk = "${COMPILE_SDK}"
+android-minSdk = "${MIN_SDK}"
+android-targetSdk = "${TARGET_SDK}"
+androidx-activityCompose = "${ACTIVITY_COMPOSE_VERSION}"
 
 [libraries]
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activityCompose" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation-compose" }
 
 [plugins]
@@ -99,36 +174,120 @@ androidLibrary = { id = "com.android.library", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 `;
   await fs.ensureDir(path.join(outputDir, 'gradle'));
-  await fs.writeFile(path.join(outputDir, 'gradle', 'libs.versions.toml'), libsVersions);
+  await fs.writeFile(
+    path.join(outputDir, 'gradle', 'libs.versions.toml'),
+    libsVersions,
+    'utf-8'
+  );
 
-  // 3. androidApp Module
-  const androidAppDir = path.join(outputDir, 'androidApp');
-  await fs.ensureDir(androidAppDir);
-  
-  const androidBuildGradle = `plugins {
-    alias(libs.plugins.androidApplication)
+  // Shared module
+  const composeAppBuildGradle = `import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.androidLibrary)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
-    androidTarget()
+    androidTarget {
+        compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_17)
+        }
+    }
+
+    listOf(iosArm64(), iosSimulatorArm64()).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+    }
+
+    sourceSets {
+        commonMain.dependencies {
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.material3)
+            implementation(compose.ui)
+            implementation(libs.navigation.compose)
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.serialization.json)
+        }
+        androidMain.dependencies {
+            implementation(libs.ktor.client.android)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+        }
+    }
 }
 
 android {
-    namespace = "${config.packageName}"
+    namespace = "${packageName}"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "${config.packageName}"
+        minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+`;
+  await fs.writeFile(
+    path.join(outputDir, 'composeApp', 'build.gradle.kts'),
+    composeAppBuildGradle,
+    'utf-8'
+  );
+
+  // Android application module
+  const androidAppDir = path.join(outputDir, 'androidApp');
+  await fs.ensureDir(androidAppDir);
+
+  const androidBuildGradle = `import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.composeCompiler)
+}
+
+android {
+    namespace = "${packageName}"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+    defaultConfig {
+        applicationId = "${packageName}"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
+    }
+
+    buildFeatures {
+        compose = true
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
@@ -137,17 +296,24 @@ dependencies {
     implementation(libs.androidx.activity.compose)
 }
 `;
-  await fs.writeFile(path.join(androidAppDir, 'build.gradle.kts'), androidBuildGradle);
+  await fs.writeFile(
+    path.join(androidAppDir, 'build.gradle.kts'),
+    androidBuildGradle,
+    'utf-8'
+  );
 
   const manifest = `<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
-        android:label="${config.name}"
+        android:label="${String(context.appTitle)}"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.NoActionBar">
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
             android:exported="true"
             android:theme="@android:style/Theme.Material.NoActionBar">
             <intent-filter>
@@ -160,49 +326,101 @@ dependencies {
 `;
   const manifestDir = path.join(androidAppDir, 'src', 'main');
   await fs.ensureDir(manifestDir);
-  await fs.writeFile(path.join(manifestDir, 'AndroidManifest.xml'), manifest);
+  await fs.writeFile(
+    path.join(manifestDir, 'AndroidManifest.xml'),
+    manifest,
+    'utf-8'
+  );
 
-  const packagePath = config.packageName.replace(/\./g, '/');
-  const mainActivity = `package ${config.packageName}
+  const mainActivity = `package ${packageName}
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import core.i18n.AppContextHolder
+import core.theme.AppTheme
 import navigation.AppNavigation
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppContextHolder.context = applicationContext
+        enableEdgeToEdge()
         setContent {
-            AppNavigation()
+            AppTheme {
+                AppNavigation()
+            }
         }
     }
 }
 `;
-  const kotlinDir = path.join(manifestDir, 'kotlin', packagePath);
+  const kotlinDir = path.join(manifestDir, 'kotlin', ...packageName.split('.'));
   await fs.ensureDir(kotlinDir);
-  await fs.writeFile(path.join(kotlinDir, 'MainActivity.kt'), mainActivity);
+  await fs.writeFile(
+    path.join(kotlinDir, 'MainActivity.kt'),
+    mainActivity,
+    'utf-8'
+  );
+}
 
-  // 4. iosApp Module (More complete structure)
+async function generateKmpNativeFiles(
+  config: ProjectConfig,
+  context: Record<string, unknown>
+): Promise<void> {
+  const outputDir = config.outputDir;
+  const packageName = config.packageName;
+  const appTitle = String(context.appTitle);
+
+  // iOS Compose entry point
+  const iosMainDir = path.join(
+    outputDir,
+    'composeApp',
+    'src',
+    'iosMain',
+    'kotlin'
+  );
+  await fs.ensureDir(iosMainDir);
+  await fs.writeFile(
+    path.join(iosMainDir, 'MainViewController.kt'),
+    `import androidx.compose.ui.window.ComposeUIViewController
+import core.theme.AppTheme
+import navigation.AppNavigation
+
+fun MainViewController() = ComposeUIViewController {
+    AppTheme {
+        AppNavigation()
+    }
+}
+`,
+    'utf-8'
+  );
+
+  // iOS application shell
   const iosAppDir = path.join(outputDir, 'iosApp');
   const iosContentDir = path.join(iosAppDir, 'iosApp');
   await fs.ensureDir(iosContentDir);
-  
-  const iosAppSwift = `import SwiftUI
-import ComposeApp
+
+  await fs.writeFile(
+    path.join(iosContentDir, 'iOSApp.swift'),
+    `import SwiftUI
 
 @main
 struct iOSApp: App {
-	var body: some Scene {
-		WindowGroup {
-			ContentView()
-		}
-	}
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .ignoresSafeArea(.all)
+        }
+    }
 }
-`;
-  await fs.writeFile(path.join(iosContentDir, 'iosApp.swift'), iosAppSwift);
+`,
+    'utf-8'
+  );
 
-  const contentViewSwift = `import SwiftUI
+  await fs.writeFile(
+    path.join(iosContentDir, 'ContentView.swift'),
+    `import SwiftUI
 import ComposeApp
 
 struct ContentView: View {
@@ -219,62 +437,102 @@ struct ComposeView: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
 }
-`;
-  await fs.writeFile(path.join(iosContentDir, 'ContentView.swift'), contentViewSwift);
+`,
+    'utf-8'
+  );
 
-  const infoPlist = `<?xml version="1.0" encoding="UTF-8"?>
+  await fs.writeFile(
+    path.join(iosContentDir, 'Info.plist'),
+    `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>$(PRODUCT_NAME)</string>
-	<key>CFBundlePackageType</key>
-	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
-	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
-	<key>CFBundleVersion</key>
-	<string>1</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<false/>
-	</dict>
-	<key>UILaunchScreen</key>
-	<dict/>
-	<key>UIRequiredDeviceCapabilities</key>
-	<array>
-		<string>armv7</string>
-	</array>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>$(DEVELOPMENT_LANGUAGE)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleInfoDictionaryVersion</key>
+    <string>6.0</string>
+    <key>CFBundleName</key>
+    <string>${appTitle}</string>
+    <key>CFBundleDisplayName</key>
+    <string>${appTitle}</string>
+    <key>CFBundlePackageType</key>
+    <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+    <key>CFBundleShortVersionString</key>
+    <string>1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>LSRequiresIPhoneOS</key>
+    <true/>
+    <key>UILaunchScreen</key>
+    <dict/>
 </dict>
 </plist>
-`;
-  await fs.writeFile(path.join(iosContentDir, 'Info.plist'), infoPlist);
+`,
+    'utf-8'
+  );
 
-  // 5. Shared MainView Bridges
-  const androidMainDir = path.join(outputDir, 'composeApp', 'src', 'androidMain', 'kotlin');
-  await fs.ensureDir(androidMainDir);
-  await fs.writeFile(path.join(androidMainDir, 'MainView.kt'), `import androidx.compose.runtime.Composable\nimport navigation.AppNavigation\n\n@Composable\nfun MainView() {\n    AppNavigation()\n}\n`);
+  // XcodeGen spec: keeps the iOS project reproducible without a binary pbxproj.
+  await fs.writeFile(
+    path.join(iosAppDir, 'project.yml'),
+    `name: iosApp
+options:
+  bundleIdPrefix: ${packageName.split('.').slice(0, -1).join('.')}
+  deploymentTarget:
+    iOS: "16.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: ""
+targets:
+  iosApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: iosApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: ${packageName}
+        INFOPLIST_FILE: iosApp/Info.plist
+        FRAMEWORK_SEARCH_PATHS: "$(SRCROOT)/../composeApp/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)"
+        OTHER_LDFLAGS: "-framework ComposeApp"
+    preBuildScripts:
+      - name: Build Kotlin framework
+        basedOnDependencyAnalysis: false
+        script: |
+          cd "$SRCROOT/.."
+          ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+`,
+    'utf-8'
+  );
 
-  const iosMainDir = path.join(outputDir, 'composeApp', 'src', 'iosMain', 'kotlin');
-  await fs.ensureDir(iosMainDir);
-  await fs.writeFile(path.join(iosMainDir, 'MainViewController.kt'), `import androidx.compose.ui.window.ComposeUIViewController\nimport navigation.AppNavigation\n\nfun MainViewController() = ComposeUIViewController {\n    AppNavigation()\n}\n`);
-  
-  logger.success('KMP native platform files generated.');
+  await fs.writeFile(
+    path.join(iosAppDir, 'README.md'),
+    `# iOS app
+
+The Swift sources are ready, but Xcode needs a project file. Generate one with
+[XcodeGen](https://github.com/yonaskolb/XcodeGen):
+
+\`\`\`bash
+brew install xcodegen
+cd iosApp
+xcodegen generate
+open iosApp.xcodeproj
+\`\`\`
+
+The \`project.yml\` builds the shared Kotlin framework through
+\`./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\` before compiling
+Swift, so always open the generated workspace from this directory.
+`,
+    'utf-8'
+  );
 }
 
 async function generateKmpNavigation(
   config: ProjectConfig,
-  _context: Record<string, unknown>
+  context: Record<string, unknown>
 ): Promise<void> {
   const navDir = path.join(
     config.outputDir,
@@ -286,61 +544,164 @@ async function generateKmpNavigation(
   );
   await fs.ensureDir(navDir);
 
+  const selected = new Set(config.screens);
   const imports: string[] = [];
-  const screens: string[] = [];
+  const routes: string[] = [];
   const composables: string[] = [];
 
   for (const screenId of config.screens) {
     const cases = screenIdToCases(screenId);
     const moduleDir = screenId.replace(/-/g, '');
     imports.push(`import features.${moduleDir}.view.${cases.pascal}Screen`);
-    
-    screens.push(`@Serializable\nobject ${cases.pascal}`);
-    composables.push(`        composable<${cases.pascal}> {\n            ${cases.pascal}Screen()\n        }`);
+    routes.push(`@Serializable\nobject ${cases.pascal}`);
   }
 
-  // Improved start destination logic
-  let startScreenId = config.screens[0] || 'signin';
-  if (config.screens.includes('onboarding')) {
-    startScreenId = 'onboarding';
-  } else if (config.screens.includes('signin')) {
-    startScreenId = 'signin';
+  const navigateTo = (id: string) =>
+    `navController.navigate(${screenIdToCases(id).pascal}) {
+                    popUpTo(0) { inclusive = true }
+                }`;
+
+  const postAuthId = getScreenIdFromCases(context.postAuthScreen);
+  const startId = getScreenIdFromCases(context.initialScreen);
+  const startDest = startId ? screenIdToCases(startId).pascal : 'SignIn';
+
+  for (const screenId of config.screens) {
+    const cases = screenIdToCases(screenId);
+    const args: string[] = [];
+
+    if (screenId === 'signin') {
+      if (selected.has('signup')) {
+        args.push(`onNavigateToSignUp = { navController.navigate(SignUp) }`);
+      }
+      if (selected.has('forgot-password')) {
+        args.push(
+          `onNavigateToForgotPassword = { navController.navigate(ForgotPassword) }`
+        );
+      }
+      if (postAuthId && postAuthId !== 'signin') {
+        args.push(`onSignInSuccess = { ${navigateTo(postAuthId)} }`);
+      }
+    }
+
+    if (screenId === 'signup') {
+      if (postAuthId && postAuthId !== 'signup') {
+        args.push(`onSuccess = { ${navigateTo(postAuthId)} }`);
+      }
+    }
+
+    if (screenId === 'forgot-password') {
+      args.push(`onBack = { navController.popBackStack() }`);
+    }
+
+    if (screenId === 'onboarding') {
+      if (postAuthId && postAuthId !== 'onboarding') {
+        args.push(`onFinish = { ${navigateTo(postAuthId)} }`);
+      }
+    }
+
+    if (screenId === 'profile') {
+      if (selected.has('settings')) {
+        args.push(
+          `onNavigateToSettings = { navController.navigate(Settings) }`
+        );
+      }
+      if (selected.has('signin')) {
+        args.push(`onSignOut = { ${navigateTo('signin')} }`);
+      }
+    }
+
+    if (screenId === 'settings') {
+      const navCases = config.screens
+        .filter((id) =>
+          [
+            'change-password',
+            'privacy-policy',
+            'terms',
+            'faq',
+            'about',
+          ].includes(id)
+        )
+        .map(
+          (id) =>
+            `            "${id}" -> navController.navigate(${
+              screenIdToCases(id).pascal
+            })`
+        );
+      if (navCases.length > 0) {
+        args.push(
+          `onNavigate = { id ->
+        when (id) {
+${navCases.join('\n')}
+            else -> Unit
+        }
+    }`
+        );
+      }
+    }
+
+    const argBlock =
+      args.length > 0
+        ? `(\n${args.map((a) => `            ${a}`).join(',\n')}\n        )`
+        : '()';
+
+    composables.push(`        composable<${cases.pascal}> {
+            ${cases.pascal}Screen${argBlock}
+        }`);
   }
-  
-  const startDest = screenIdToCases(startScreenId).pascal;
 
   const navContent = `package navigation
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
 ${imports.join('\n')}
 
-// Routes
-${screens.join('\n')}
+// Type-safe routes
+${routes.join('\n')}
 
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    
-    NavHost(
-        navController = navController,
-        startDestination = ${startDest}
+
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.safeDrawing),
+        color = MaterialTheme.colorScheme.background,
     ) {
+        NavHost(
+            navController = navController,
+            startDestination = ${startDest}
+        ) {
 ${composables.join('\n\n')}
+        }
     }
 }
 `;
 
-  await fs.writeFile(path.join(navDir, 'AppScreen.kt'), navContent);
+  await fs.writeFile(
+    path.join(navDir, 'AppNavigation.kt'),
+    navContent,
+    'utf-8'
+  );
 }
 
-async function generateKmpViewModels(
-  config: ProjectConfig,
-  _context: Record<string, unknown>
-): Promise<void> {
+function getScreenIdFromCases(value: unknown): string | null {
+  if (!value || typeof value !== 'object') return null;
+  const kebab = (value as { kebab?: string }).kebab;
+  return typeof kebab === 'string' ? kebab : null;
+}
+
+async function generateKmpViewModels(config: ProjectConfig): Promise<void> {
   const diDir = path.join(
     config.outputDir,
     'composeApp',
@@ -352,13 +713,30 @@ async function generateKmpViewModels(
   await fs.ensureDir(diDir);
 
   const imports: string[] = [];
-  const registrations: string[] = [];
+  const factories: string[] = [];
 
   for (const screenId of config.screens) {
     const cases = screenIdToCases(screenId);
     const moduleDir = screenId.replace(/-/g, '');
-    imports.push(`import features.${moduleDir}.viewmodel.${cases.pascal}ViewModel`);
-    registrations.push(`    val ${cases.camel}ViewModel = ${cases.pascal}ViewModel(apiClient)`);
+    const vmFile = path.join(
+      config.outputDir,
+      'composeApp',
+      'src',
+      'commonMain',
+      'kotlin',
+      'features',
+      moduleDir,
+      'viewmodel',
+      `${cases.pascal}ViewModel.kt`
+    );
+    if (!(await fs.pathExists(vmFile))) continue;
+
+    imports.push(
+      `import features.${moduleDir}.viewmodel.${cases.pascal}ViewModel`
+    );
+    factories.push(
+      `    fun ${cases.camel}ViewModel() = ${cases.pascal}ViewModel(apiClient)`
+    );
   }
 
   const diContent = `package di
@@ -369,9 +747,13 @@ ${imports.join('\n')}
 object ViewModelProvider {
     private val apiClient = ApiClient()
 
-${registrations.join('\n')}
+${factories.join('\n')}
 }
 `;
 
-  await fs.writeFile(path.join(diDir, 'ViewModelProvider.kt'), diContent);
+  await fs.writeFile(
+    path.join(diDir, 'ViewModelProvider.kt'),
+    diContent,
+    'utf-8'
+  );
 }

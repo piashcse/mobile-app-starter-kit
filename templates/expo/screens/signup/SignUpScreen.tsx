@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppButton, AppInput } from '../../components';
-import { colors, typography, spacing } from '../../theme';
+import { makeStyles, typography, spacing } from '../../theme';
 import { useRegisterMutation } from '../../api/apiSlice';
 
 export default function SignUpScreen() {
+  const styles = useStyles();
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -116,7 +117,7 @@ export default function SignUpScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((colors) => StyleSheet.create({
   flex: { flex: 1 },
   scrollContent: {
     flexGrow: 1,
@@ -139,4 +140,4 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   footerText: { ...typography.body, color: colors.textSecondary },
-});
+}));

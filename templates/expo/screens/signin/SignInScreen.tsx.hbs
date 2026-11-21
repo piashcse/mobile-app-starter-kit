@@ -1,0 +1,192 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+{{#if hasAuthLinks}}
+import { useRouter } from 'expo-router';
+{{/if}}
+import {
+  ScreenWrapper,
+  AppButton,
+  AppInput,
+  LanguageSwitcher,
+} from '../../components';
+import { makeStyles, typography, spacing, borderRadius } from '../../theme';
+import { useTranslation } from '../../i18n';
+import { useLoginMutation } from '../../api/apiSlice';
+import { useAuthStore } from '../../store/authStore';
+
+export default function SignInScreen() {
+  const styles = useStyles();
+  const { t } = useTranslation();
+{{#if hasAuthLinks}}
+  const router = useRouter();
+{{/if}}
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const [login, { isLoading }] = useLoginMutation();
+  const authLogin = useAuthStore((state) => state.login);
+
+  const validate = (): boolean => {
+    const newErrors: { email?: string; password?: string } = {};
+    if (!email.trim()) newErrors.email = t('auth.signIn.error.emailRequired');
+    else if (!/\S+@\S+\.\S+/.test(email))
+      newErrors.email = t('auth.signIn.error.emailInvalid');
+    if (!password.trim())
+      newErrors.password = t('auth.signIn.error.passwordRequired');
+    else if (password.length < 6)
+      newErrors.password = t('auth.signIn.error.passwordTooShort');
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSignIn = async () => {
+    if (!validate()) return;
+    try {
+      const result = await login({ email, password }).unwrap();
+      authLogin(result.token, result.user);
+{{#if canNavigateAfterAuth}}
+      router.replace('{{postAuthRoute}}');
+{{/if}}
+    } catch (err: any) {
+      setErrors({
+        email: err?.data?.message || t('auth.signIn.error.invalidCredentials'),
+      });
+    }
+  };
+
+  return (
+    <ScreenWrapper>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <Text
+              style={styles.emoji}
+              accessibilityLabel={t('auth.signIn.logoLabel')}
+            >
+              👋
+            </Text>
+            <Text style={styles.title}>{t('auth.signIn.title')}</Text>
+            <Text style={styles.subtitle}>{t('auth.signIn.subtitle')}</Text>
+          </View>
+
+          <View style={styles.form}>
+            <AppInput
+              label={t('auth.signIn.emailLabel')}
+              placeholder={t('auth.signIn.emailPlaceholder')}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              error={errors.email}
+            />
+
+            <AppInput
+              label={t('auth.signIn.passwordLabel')}
+              placeholder={t('auth.signIn.passwordPlaceholder')}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              showPasswordLabel={t('auth.signIn.showPassword')}
+              hidePasswordLabel={t('auth.signIn.hidePassword')}
+              error={errors.password}
+            />
+
+            <AppButton
+              title={t('auth.signIn.submit')}
+              onPress={handleSignIn}
+              loading={isLoading}
+              size="lg"
+            />
+
+{{#if hasForgotPassword}}
+            <AppButton
+              title={t('auth.signIn.forgotPassword')}
+              onPress={() => router.push('/(auth)/forgot-password')}
+              variant="ghost"
+            />
+{{/if}}
+          </View>
+
+{{#if hasSignUp}}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>
+              {t('auth.signIn.signUpPrompt')}
+            </Text>
+            <AppButton
+              title={t('auth.signIn.signUpAction')}
+              onPress={() => router.push('/(auth)/signup')}
+              variant="outline"
+              size="sm"
+            />
+          </View>
+{{/if}}
+
+          <View style={styles.demo}>
+            <Text style={styles.demoText}>{t('auth.signIn.demo')}</Text>
+          </View>
+
+          <LanguageSwitcher />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ScreenWrapper>
+  );
+}
+
+const useStyles = makeStyles((colors) => StyleSheet.create({
+  flex: { flex: 1 },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: spacing.lg,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  emoji: {
+    fontSize: 48,
+    marginBottom: spacing.md,
+  },
+  title: {
+    ...typography.h1,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  form: {
+    gap: spacing.sm,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: spacing.xl,
+    gap: spacing.sm,
+  },
+  footerText: {
+    ...typography.body,
+    color: colors.textSecondary,
+  },
+  demo: {
+    marginTop: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+  },
+  demoText: {
+    ...typography.caption,
+    color: colors.textMuted,
+  },
+}));

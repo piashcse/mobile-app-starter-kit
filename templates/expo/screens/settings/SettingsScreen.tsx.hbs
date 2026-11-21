@@ -1,0 +1,176 @@
+import React, { useState } from 'react';
+import { View, Text, ScrollView, Switch, TouchableOpacity, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { ScreenWrapper, AppCard } from '../../components';
+import { makeStyles, useAppTheme, typography, spacing } from '../../theme';
+import { mockData } from '../../api/mockData';
+
+interface SettingItem {
+  id: string;
+  label: string;
+  icon: string;
+  type: 'toggle' | 'navigate';
+  route?: string;
+}
+
+export default function SettingsScreen() {
+  const styles = useStyles();
+  const { colors, isDark, toggleScheme } = useAppTheme();
+  const router = useRouter();
+  const switchTrackColor = {
+    false: colors.textMuted,
+    true: styles.switchActive.color,
+  };
+  const [settings, setSettings] = useState({
+    notifications: true,
+    biometrics: false,
+    analytics: true,
+  });
+
+  const toggleSetting = (key: keyof typeof settings) => {
+    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const accountItems: SettingItem[] = [
+{{#if hasChangePassword}}
+    { id: 'change-password', label: 'Change Password', icon: '🔑', type: 'navigate', route: '/(main)/change-password' },
+{{/if}}
+{{#if hasPrivacyPolicy}}
+    { id: 'privacy-policy', label: 'Privacy Policy', icon: '🛡️', type: 'navigate', route: '/(main)/privacy-policy' },
+{{/if}}
+{{#if hasTerms}}
+    { id: 'terms', label: 'Terms of Service', icon: '📄', type: 'navigate', route: '/(main)/terms' },
+{{/if}}
+{{#if hasFaq}}
+    { id: 'faq', label: 'FAQ', icon: '❓', type: 'navigate', route: '/(main)/faq' },
+{{/if}}
+{{#if hasAbout}}
+    { id: 'about', label: 'About', icon: 'ℹ️', type: 'navigate', route: '/(main)/about' },
+{{/if}}
+  ];
+
+  const sections: { title: string; items: SettingItem[] }[] = [
+    {
+      title: 'Preferences',
+      items: [
+        { id: 'notifications', label: 'Push Notifications', icon: '🔔', type: 'toggle' },
+        { id: 'appearance', label: 'Dark Mode', icon: '🌙', type: 'toggle' },
+        { id: 'biometrics', label: 'Biometric Login', icon: '🔒', type: 'toggle' },
+        { id: 'analytics', label: 'Usage Analytics', icon: '📊', type: 'toggle' },
+      ],
+    },
+    ...(accountItems.length > 0
+      ? [{ title: 'Account', items: accountItems }]
+      : []),
+  ];
+
+  const isToggled = (item: SettingItem): boolean => {
+    if (item.id === 'appearance') return isDark;
+    return Boolean(settings[item.id as keyof typeof settings]);
+  };
+
+  const onToggle = (item: SettingItem) => {
+    if (item.id === 'appearance') {
+      toggleScheme();
+      return;
+    }
+    toggleSetting(item.id as keyof typeof settings);
+  };
+
+  return (
+    <ScreenWrapper>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text style={styles.title}>Settings</Text>
+
+        {sections.map((section) => (
+          <View key={section.title} style={styles.section}>
+            <Text style={styles.sectionTitle}>{section.title}</Text>
+            <AppCard>
+              {section.items.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.row,
+                    index < section.items.length - 1 && styles.rowBorder,
+                  ]}
+                  onPress={() => {
+                    if (item.type === 'navigate' && item.route) {
+                      router.push(item.route as never);
+                    }
+                  }}
+                  activeOpacity={item.type === 'toggle' ? 1 : 0.7}
+                >
+                  <View style={styles.rowLeft}>
+                    <Text style={styles.rowIcon}>{item.icon}</Text>
+                    <Text style={styles.rowLabel}>{item.label}</Text>
+                  </View>
+                  {item.type === 'toggle' ? (
+                    <Switch
+                      value={isToggled(item)}
+                      onValueChange={() => onToggle(item)}
+                      trackColor={switchTrackColor}
+                      thumbColor={styles.switchThumb.color}
+                    />
+                  ) : (
+                    <Text style={styles.chevron}>›</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </AppCard>
+          </View>
+        ))}
+
+        <Text style={styles.version}>
+          Version {mockData.app.about.version}
+        </Text>
+      </ScrollView>
+    </ScreenWrapper>
+  );
+}
+
+const useStyles = makeStyles((colors) => StyleSheet.create({
+  scrollContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
+  },
+  title: {
+    ...typography.h1,
+    color: colors.textPrimary,
+    marginBottom: spacing.lg,
+  },
+  section: { marginBottom: spacing.lg },
+  sectionTitle: {
+    ...typography.label,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+  },
+  rowBorder: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  rowLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  rowIcon: { fontSize: 20 },
+  rowLabel: { ...typography.body, color: colors.textPrimary },
+  chevron: { fontSize: 24, color: colors.textMuted },
+  switchActive: { color: colors.primary },
+  switchThumb: { color: colors.primary },
+  version: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.lg,
+  },
+}));

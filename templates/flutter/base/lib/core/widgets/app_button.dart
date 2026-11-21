@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../theme/design_tokens.dart';
 
 class AppButton extends StatelessWidget {
   final String title;
@@ -23,10 +24,12 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     if (isText) {
       return TextButton(
         onPressed: isLoading ? null : onPressed,
-        child: _buildChild(context, AppColors.primary),
+        child: _buildChild(context, primary),
       );
     }
 
@@ -35,7 +38,7 @@ class AppButton extends StatelessWidget {
         width: isFullWidth ? double.infinity : null,
         child: OutlinedButton(
           onPressed: isLoading ? null : onPressed,
-          child: _buildChild(context, AppColors.primary),
+          child: _buildChild(context, primary),
         ),
       );
     }
@@ -47,15 +50,16 @@ class AppButton extends StatelessWidget {
           gradient: const LinearGradient(
             colors: [AppColors.gradientStart, AppColors.gradientEnd],
           ),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadii.md),
         ),
         child: ElevatedButton(
           onPressed: isLoading ? null : onPressed,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.transparent,
             shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
           ),
-          child: _buildChild(context, AppColors.textPrimary),
+          child: _buildChild(context, Colors.white),
         ),
       ),
     );

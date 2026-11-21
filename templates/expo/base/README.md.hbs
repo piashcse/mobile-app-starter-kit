@@ -1,0 +1,60 @@
+# {{appTitle}}
+
+Generated with [Mobile App Starter Kit](https://github.com/piashcse/mobile-app-starter-kit) using **Expo React Native**.
+
+## Getting started
+
+```bash
+npm install
+npx expo start
+```
+
+Then press `i` for the iOS simulator or `a` for an Android emulator.
+
+To generate native `android/` and `ios/` projects:
+
+```bash
+npx expo prebuild
+```
+
+## Demo credentials
+
+- Email: `test@example.com`
+- Password: `password`
+
+## Included screens
+
+{{#each screens}}
+- {{name}}
+{{/each}}
+
+## Design system & localization
+
+- Shared design tokens: `design-tokens.json`
+- Light/dark theme with a persisted toggle
+- English + Spanish localization with a language switcher on Sign In
+- Add strings to the shared catalog in the CLI and regenerate to extend it
+
+## Architecture
+
+- **Expo Router** file-based navigation (`app/`)
+- **RTK Query** mock API (`src/api`)
+- **Zustand** auth store with secure persistence (`src/store`)
+- **Feature folders** for screens (`src/features`)
+- **Design tokens** with light/dark themes (`src/theme`)
+
+## Replacing the mock API
+
+The RTK Query slice uses `fakeBaseQuery` with data from `src/api/mockData.ts`.
+Replace `baseQuery` in `src/api/apiSlice.ts` with `fetchBaseQuery` pointing at
+your backend, then delete `mockData.ts`.
+
+## Scripts
+
+| Command | Description |
+| --- | --- |
+| `npm start` | Start the Expo dev server |
+| `npm run android` | Start on Android |
+| `npm run ios` | Start on iOS |
+| `npm run web` | Start on the web |
+| `npm run typecheck` | TypeScript check |

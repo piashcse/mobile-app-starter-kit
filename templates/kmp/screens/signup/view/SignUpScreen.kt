@@ -11,14 +11,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import core.components.AppButton
 import core.components.AppInput
-import core.theme.AppColors
 import core.viewmodel.UiState
 import features.signup.viewmodel.SignUpViewModel
 import di.ViewModelProvider
 
 @Composable
 fun SignUpScreen(onSuccess: () -> Unit = {}) {
-    val viewModel = remember { ViewModelProvider.signUpViewModel }
+    val viewModel = remember { ViewModelProvider.signUpViewModel() }
+    DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val state by viewModel.state.collectAsState()
 
     Column(
@@ -28,7 +28,7 @@ fun SignUpScreen(onSuccess: () -> Unit = {}) {
     ) {
         Text("🚀", style = MaterialTheme.typography.displayLarge)
         Spacer(Modifier.height(16.dp))
-        Text("Create Account", style = MaterialTheme.typography.headlineLarge, color = AppColors.TextPrimary)
+        Text("Create Account", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onBackground)
         Spacer(Modifier.height(32.dp))
 
         AppInput(value = state.name, onValueChange = viewModel::updateName, label = "Full Name", placeholder = "Enter your name")
@@ -37,7 +37,7 @@ fun SignUpScreen(onSuccess: () -> Unit = {}) {
         AppInput(value = state.confirmPassword, onValueChange = viewModel::updateConfirmPassword, label = "Confirm Password", placeholder = "Confirm password", isPassword = true)
 
         if (state.registerState is UiState.Error) {
-            Text((state.registerState as UiState.Error).message, color = AppColors.Error, modifier = Modifier.padding(bottom = 16.dp))
+            Text((state.registerState as UiState.Error).message, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(bottom = 16.dp))
         }
 
         AppButton(text = "Create Account", onClick = { viewModel.signUp(onSuccess) }, isLoading = state.registerState is UiState.Loading)

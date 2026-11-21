@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 class AppInput extends StatefulWidget {
   final String? label;
@@ -12,6 +11,8 @@ class AppInput extends StatefulWidget {
   final bool enabled;
   final IconData? prefixIcon;
   final ValueChanged<String>? onChanged;
+  final String? showPasswordLabel;
+  final String? hidePasswordLabel;
 
   const AppInput({
     super.key,
@@ -25,6 +26,8 @@ class AppInput extends StatefulWidget {
     this.enabled = true,
     this.prefixIcon,
     this.onChanged,
+    this.showPasswordLabel,
+    this.hidePasswordLabel,
   });
 
   @override
@@ -36,14 +39,17 @@ class _AppInputState extends State<AppInput> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (widget.label != null) ...[
           Text(
             widget.label!,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: muted,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -56,20 +62,23 @@ class _AppInputState extends State<AppInput> {
           maxLines: widget.maxLines,
           enabled: widget.enabled,
           onChanged: widget.onChanged,
-          style: const TextStyle(color: AppColors.textPrimary),
+          style: TextStyle(color: theme.colorScheme.onSurface),
           decoration: InputDecoration(
             hintText: widget.hint,
             errorText: widget.errorText,
             prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, color: AppColors.textMuted, size: 20)
+                ? Icon(widget.prefixIcon, color: muted, size: 20)
                 : null,
             suffixIcon: widget.obscureText
                 ? IconButton(
                     icon: Icon(
                       _isObscured ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textMuted,
+                      color: muted,
                       size: 20,
                     ),
+                    tooltip: _isObscured
+                        ? widget.showPasswordLabel
+                        : widget.hidePasswordLabel,
                     onPressed: () => setState(() => _isObscured = !_isObscured),
                   )
                 : null,

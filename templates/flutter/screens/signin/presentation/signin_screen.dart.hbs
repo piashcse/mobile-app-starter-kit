@@ -1,0 +1,196 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+{{#if hasAuthLinks}}
+import 'package:go_router/go_router.dart';
+{{/if}}
+import '../../../core/auth/auth_provider.dart';
+import '../../../core/l10n/app_localizations.dart';
+import '../../../core/l10n/language_switcher.dart';
+import '../../../core/theme/design_tokens.dart';
+import '../../../core/widgets/widgets.dart';
+import 'signin_controller.dart';
+
+class SignInScreen extends ConsumerStatefulWidget {
+  const SignInScreen({super.key});
+
+  @override
+  ConsumerState<SignInScreen> createState() => _SignInScreenState();
+}
+
+class _SignInScreenState extends ConsumerState<SignInScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String? _emailError;
+  String? _passwordError;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  bool _validate() {
+    final l10n = AppLocalizations.of(context);
+    setState(() {
+      _emailError = null;
+      _passwordError = null;
+    });
+    bool isValid = true;
+
+    if (_emailController.text.trim().isEmpty) {
+      setState(() => _emailError = l10n.t('auth.signIn.error.emailRequired'));
+      isValid = false;
+    } else if (!RegExp(r'\S+@\S+\.\S+').hasMatch(_emailController.text)) {
+      setState(() => _emailError = l10n.t('auth.signIn.error.emailInvalid'));
+      isValid = false;
+    }
+
+    if (_passwordController.text.trim().isNotEmpty &&
+        _passwordController.text.trim().length < 6) {
+      setState(
+        () => _passwordError = l10n.t('auth.signIn.error.passwordTooShort'),
+      );
+      isValid = false;
+    }
+
+    if (_passwordController.text.trim().isEmpty) {
+      setState(() => _passwordError = l10n.t('auth.signIn.error.passwordRequired'));
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  Future<void> _handleSignIn() async {
+    if (!_validate()) return;
+
+    final controller = ref.read(signInControllerProvider.notifier);
+    final success = await controller.signIn(
+      _emailController.text,
+      _passwordController.text,
+    );
+
+    if (success && mounted) {
+      await ref.read(authProvider.notifier).signIn('mock-session-token');
+{{#if canNavigateAfterAuth}}
+      if (mounted) context.go('{{postAuthPath}}');
+{{/if}}
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(signInControllerProvider);
+    final l10n = AppLocalizations.of(context);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSizes.screenPadding),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Semantics(
+                  label: l10n.t('auth.signIn.logoLabel'),
+                  child: const ExcludeSemantics(
+                    child: Text('👋', style: TextStyle(fontSize: 48)),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.t('auth.signIn.title'),
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.t('auth.signIn.subtitle'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                AppInput(
+                  label: l10n.t('auth.signIn.emailLabel'),
+                  hint: l10n.t('auth.signIn.emailPlaceholder'),
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  errorText: _emailError,
+                  prefixIcon: Icons.email_outlined,
+                ),
+
+                AppInput(
+                  label: l10n.t('auth.signIn.passwordLabel'),
+                  hint: l10n.t('auth.signIn.passwordPlaceholder'),
+                  controller: _passwordController,
+                  obscureText: true,
+                  showPasswordLabel: l10n.t('auth.signIn.showPassword'),
+                  hidePasswordLabel: l10n.t('auth.signIn.hidePassword'),
+                  errorText: _passwordError,
+                  prefixIcon: Icons.lock_outlined,
+                ),
+
+                if (state.error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      state.error!,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+                  ),
+
+                AppButton(
+                  title: l10n.t('auth.signIn.submit'),
+                  onPressed: _handleSignIn,
+                  isLoading: state.isLoading,
+                ),
+                const SizedBox(height: 8),
+
+{{#if hasForgotPassword}}
+                TextButton(
+                  onPressed: () => context.push('/forgot-password'),
+                  child: Text(l10n.t('auth.signIn.forgotPassword')),
+                ),
+{{/if}}
+
+{{#if hasSignUp}}
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${l10n.t('auth.signIn.signUpPrompt')} ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    TextButton(
+                      onPressed: () => context.push('/signup'),
+                      child: Text(l10n.t('auth.signIn.signUpAction')),
+                    ),
+                  ],
+                ),
+{{/if}}
+
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(AppRadii.md),
+                  ),
+                  child: Text(
+                    l10n.t('auth.signIn.demo'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                const LanguageSwitcher(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
