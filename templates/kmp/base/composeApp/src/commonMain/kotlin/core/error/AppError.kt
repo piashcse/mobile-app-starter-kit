@@ -22,5 +22,4 @@ enum class ValidationReason {
 
 class AppException(val error: AppError) : Exception()
 
-fun Throwable.toAppError(): AppError =
-    (this as? AppException)?.error ?: AppError.Unexpected(message)
+fun Throwable.toAppError(): AppError = (this as? AppException)?.error ?: AppError.Unexpected(message)

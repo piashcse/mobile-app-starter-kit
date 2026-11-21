@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
+import '../../../core/l10n/app_localizations.dart';
 import '../../../core/widgets/widgets.dart';
+
+class _Slide {
+  const _Slide(this.emoji, this.title, this.description);
+
+  final String emoji;
+  final String title;
+  final String description;
+}
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -13,41 +21,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  final _slides = const [
-    {'emoji': '🚀', 'title': 'Welcome', 'desc': 'Discover a new way to manage your life.'},
-    {'emoji': '🔒', 'title': 'Secure & Private', 'desc': 'Your data is encrypted and protected.'},
-    {'emoji': '⚡', 'title': 'Fast & Reliable', 'desc': 'Lightning-fast performance.'},
-    {'emoji': '🎯', 'title': 'Get Started', 'desc': 'Create your account today!'},
-  ];
+
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final slides = [
+      _Slide(
+        '🚀',
+        l10n.t('onboarding.slide1.title'),
+        l10n.t('onboarding.slide1.description'),
+      ),
+      _Slide(
+        '🔒',
+        l10n.t('onboarding.slide2.title'),
+        l10n.t('onboarding.slide2.description'),
+      ),
+      _Slide(
+        '⚡',
+        l10n.t('onboarding.slide3.title'),
+        l10n.t('onboarding.slide3.description'),
+      ),
+      _Slide(
+        '🎯',
+        l10n.t('onboarding.slide4.title'),
+        l10n.t('onboarding.slide4.description'),
+      ),
+    ];
+
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
-            if (_currentPage < _slides.length - 1)
+            if (_currentPage < slides.length - 1)
               Align(
                 alignment: Alignment.topRight,
-                child: TextButton(onPressed: () => context.go('{{onboardingPath}}'), child: const Text('Skip')),
+                child: TextButton(onPressed: () => context.go('{{onboardingPath}}'), child: Text(l10n.t('onboarding.skip'))),
               ),
             Expanded(
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: (i) => setState(() => _currentPage = i),
-                itemCount: _slides.length,
+                itemCount: slides.length,
                 itemBuilder: (context, index) {
-                  final slide = _slides[index];
+                  final slide = slides[index];
                   return Padding(
                     padding: const EdgeInsets.all(32),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(slide['emoji']!, style: const TextStyle(fontSize: 80)),
+                        Text(slide.emoji, style: const TextStyle(fontSize: 80)),
                         const SizedBox(height: 32),
-                        Text(slide['title']!, style: Theme.of(context).textTheme.headlineLarge, textAlign: TextAlign.center),
+                        Text(slide.title, style: Theme.of(context).textTheme.headlineLarge, textAlign: TextAlign.center),
                         const SizedBox(height: 16),
-                        Text(slide['desc']!, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
+                        Text(slide.description, style: Theme.of(context).textTheme.bodyMedium, textAlign: TextAlign.center),
                       ],
                     ),
                   );
@@ -56,13 +83,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(_slides.length, (i) => AnimatedContainer(
+              children: List.generate(slides.length, (i) => AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 margin: const EdgeInsets.symmetric(horizontal: 4),
                 width: _currentPage == i ? 24 : 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: _currentPage == i ? AppColors.primary : AppColors.surfaceLight,
+                  color: _currentPage == i
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(4),
                 ),
               )),
@@ -70,9 +99,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.all(24),
               child: AppButton(
-                title: _currentPage == _slides.length - 1 ? 'Get Started' : 'Next',
+                title: _currentPage == slides.length - 1
+                    ? l10n.t('onboarding.getStarted')
+                    : l10n.t('onboarding.next'),
                 onPressed: () {
-                  if (_currentPage < _slides.length - 1) {
+                  if (_currentPage < slides.length - 1) {
                     _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.ease);
                   } else {
                     context.go('{{onboardingPath}}');

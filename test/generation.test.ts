@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { generateProject } from '../src/generator.js';
+import { modernizeDesignSystem } from '../src/frameworks/flutter.js';
 import { DEFAULT_SCREENS, type Framework } from '../src/config.js';
 
 const TEXT_EXTENSIONS = new Set([
@@ -257,6 +258,11 @@ describe('generated projects', () => {
         path.join(dir, 'lib', 'core', 'l10n', 'language_switcher.dart')
       )
     ).toBe(true);
+    expect(
+      await fs.pathExists(
+        path.join(dir, 'test', 'core', 'l10n', 'app_localizations_test.dart')
+      )
+    ).toBe(true);
   });
 
   it('generates a valid KMP project', async () => {
@@ -467,6 +473,20 @@ describe('generated projects', () => {
         )
       )
     ).toBe(true);
+    expect(
+      await fs.pathExists(
+        path.join(
+          dir,
+          'composeApp',
+          'src',
+          'commonTest',
+          'kotlin',
+          'core',
+          'validation',
+          'ValidatorsTest.kt'
+        )
+      )
+    ).toBe(true);
 
     const settings = await fs.readFile(
       path.join(
@@ -512,6 +532,35 @@ describe('generated projects', () => {
         )
       )
     ).toBe(true);
+  });
+
+  it('migrates Flutter 3.47+ projects to material_ui', async () => {
+    const dir = await generate('flutter', ['signin']);
+    await modernizeDesignSystem(dir);
+
+    const pubspec = await fs.readFile(path.join(dir, 'pubspec.yaml'), 'utf-8');
+    expect(pubspec).toContain('material_ui: ^1.11.1');
+    expect(pubspec).not.toContain('flutter_localizations:');
+    expect(pubspec).not.toContain('intl:');
+
+    const app = await fs.readFile(path.join(dir, 'lib', 'app.dart'), 'utf-8');
+    expect(app).toContain('package:material_ui/material_ui.dart');
+    expect(app).toContain('GlobalMaterialLocalizations.delegates');
+    expect(app).not.toContain('flutter_localizations');
+
+    const screen = await fs.readFile(
+      path.join(
+        dir,
+        'lib',
+        'features',
+        'signin',
+        'presentation',
+        'signin_screen.dart'
+      ),
+      'utf-8'
+    );
+    expect(screen).toContain('package:material_ui/material_ui.dart');
+    expect(screen).not.toContain('package:flutter/material.dart');
   });
 
   it('emits identical design tokens on every platform', async () => {

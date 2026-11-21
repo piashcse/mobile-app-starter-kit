@@ -1,11 +1,12 @@
-import React from 'react';
 import { View, Text, StyleSheet, FlatList } from 'react-native';
 import { ScreenWrapper, AppCard, LoadingSpinner } from '../../components';
-import { makeStyles, useAppTheme, typography, spacing, borderRadius } from '../../theme';
-import { useGetNotificationsQuery } from '../../api/apiSlice';
+import { makeStyles, useAppTheme, typography, spacing } from '../../theme';
+import { useGetNotificationsQuery } from './api';
+import { useTranslation } from '../../i18n';
 
 export default function NotificationsScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   const { colors } = useAppTheme();
   const typeColors = {
     info: colors.info,
@@ -15,12 +16,12 @@ export default function NotificationsScreen() {
   };
   const { data: notifications, isLoading } = useGetNotificationsQuery();
 
-  if (isLoading) return <LoadingSpinner fullScreen message="Loading notifications..." />;
+  if (isLoading) return <LoadingSpinner fullScreen message={t('notifications.loading')} />;
 
   return (
     <ScreenWrapper>
       <View style={styles.container}>
-        <Text style={styles.title}>Notifications</Text>
+        <Text style={styles.title}>{t('notifications.title')}</Text>
         <FlatList
           data={notifications}
           keyExtractor={(item) => item.id.toString()}
@@ -54,7 +55,7 @@ export default function NotificationsScreen() {
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyEmoji}>🔔</Text>
-              <Text style={styles.emptyText}>No notifications yet</Text>
+              <Text style={styles.emptyText}>{t('notifications.empty')}</Text>
             </View>
           }
         />

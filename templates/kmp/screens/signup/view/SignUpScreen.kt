@@ -29,7 +29,6 @@ import core.theme.AppSizes
 import core.theme.AppSpacing
 import core.viewmodel.UiState
 import di.ViewModelProvider
-import features.signup.viewmodel.SignUpViewModel
 
 @Composable
 fun SignUpScreen(
@@ -39,7 +38,7 @@ fun SignUpScreen(
     val viewModel = remember { ViewModelProvider.signUpViewModel() }
     DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val state by viewModel.state.collectAsState()
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()

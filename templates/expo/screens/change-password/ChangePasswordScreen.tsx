@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { useState } from 'react';
+import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ScreenWrapper, AppButton, AppInput } from '../../components';
-import { makeStyles, typography, spacing } from '../../theme';
-import { useChangePasswordMutation } from '../../api/apiSlice';
+import { AuthScreen, AppButton, AppInput } from '../../components';
+import { useChangePasswordMutation } from './api';
+import { isStrongPassword } from '../../utils/validation';
+import { useTranslation } from '../../i18n';
 
 export default function ChangePasswordScreen() {
-  const styles = useStyles();
+  const { t } = useTranslation();
   const router = useRouter();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -17,11 +18,16 @@ export default function ChangePasswordScreen() {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!currentPassword.trim()) newErrors.currentPassword = 'Current password is required';
-    if (!newPassword.trim()) newErrors.newPassword = 'New password is required';
-    else if (newPassword.length < 8) newErrors.newPassword = 'Must be at least 8 characters';
-    if (newPassword !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
-    if (currentPassword === newPassword) newErrors.newPassword = 'New password must be different';
+    if (!currentPassword.trim())
+      newErrors.currentPassword = t('validation.currentPasswordRequired');
+    if (!newPassword.trim())
+      newErrors.newPassword = t('validation.passwordRequired');
+    else if (!isStrongPassword(newPassword))
+      newErrors.newPassword = t('validation.passwordTooShort');
+    if (newPassword !== confirmPassword)
+      newErrors.confirmPassword = t('validation.passwordsDoNotMatch');
+    if (currentPassword === newPassword)
+      newErrors.newPassword = t('validation.passwordMustDiffer');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -29,70 +35,57 @@ export default function ChangePasswordScreen() {
   const handleSubmit = async () => {
     if (!validate()) return;
     try {
-      const result = await changePassword({
+      await changePassword({
         currentPassword,
         newPassword,
         confirmPassword,
       }).unwrap();
-      Alert.alert('Success', result.message, [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      Alert.alert(
+        t('common.success'),
+        t('auth.changePassword.successMessage'),
+        [{ text: t('common.ok'), onPress: () => router.back() }]
+      );
     } catch {
-      Alert.alert('Error', 'Failed to change password');
+      Alert.alert(t('common.errorTitle'), t('auth.changePassword.error'));
     }
   };
 
   return (
-    <ScreenWrapper>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.emoji}>🔑</Text>
-          <Text style={styles.title}>Change Password</Text>
-          <Text style={styles.subtitle}>Create a strong new password</Text>
-        </View>
-
-        <View style={styles.form}>
-          <AppInput
-            label="Current Password"
-            placeholder="Enter current password"
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            secureTextEntry
-            error={errors.currentPassword}
-          />
-          <AppInput
-            label="New Password"
-            placeholder="Enter new password (min 8 chars)"
-            value={newPassword}
-            onChangeText={setNewPassword}
-            secureTextEntry
-            error={errors.newPassword}
-          />
-          <AppInput
-            label="Confirm New Password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            error={errors.confirmPassword}
-          />
-          <AppButton
-            title="Update Password"
-            onPress={handleSubmit}
-            loading={isLoading}
-            size="lg"
-          />
-        </View>
-      </ScrollView>
-    </ScreenWrapper>
+    <AuthScreen
+      emoji="🔑"
+      title={t('auth.changePassword.title')}
+      subtitle={t('auth.changePassword.subtitle')}
+    >
+      <AppInput
+        label={t('auth.changePassword.currentLabel')}
+        placeholder={t('auth.changePassword.currentPlaceholder')}
+        value={currentPassword}
+        onChangeText={setCurrentPassword}
+        secureTextEntry
+        error={errors.currentPassword}
+      />
+      <AppInput
+        label={t('auth.changePassword.newLabel')}
+        placeholder={t('auth.changePassword.newPlaceholder')}
+        value={newPassword}
+        onChangeText={setNewPassword}
+        secureTextEntry
+        error={errors.newPassword}
+      />
+      <AppInput
+        label={t('auth.changePassword.confirmLabel')}
+        placeholder={t('auth.changePassword.confirmPlaceholder')}
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+        secureTextEntry
+        error={errors.confirmPassword}
+      />
+      <AppButton
+        title={t('auth.changePassword.submit')}
+        onPress={handleSubmit}
+        loading={isLoading}
+        size="lg"
+      />
+    </AuthScreen>
   );
 }
-
-const useStyles = makeStyles((colors) => StyleSheet.create({
-  scrollContent: { flexGrow: 1, justifyContent: 'center', padding: spacing.lg },
-  header: { alignItems: 'center', marginBottom: spacing.xl },
-  emoji: { fontSize: 48, marginBottom: spacing.md },
-  title: { ...typography.h2, color: colors.textPrimary },
-  subtitle: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs },
-  form: { gap: spacing.sm },
-}));

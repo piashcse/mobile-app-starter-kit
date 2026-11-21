@@ -14,7 +14,9 @@ class ProfileViewModel(private val apiClient: ApiClient) : BaseViewModel() {
     private val _state = MutableStateFlow<UiState<UserProfile>>(UiState.Loading)
     val state: StateFlow<UiState<UserProfile>> = _state.asStateFlow()
 
-    init { loadProfile() }
+    init {
+        loadProfile()
+    }
 
     private fun loadProfile() {
         viewModelScope.launch {

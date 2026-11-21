@@ -6,7 +6,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import platform.Foundation.NSUserDefaults
 
 actual object LocalAppLocale {
-    private const val languageKey = "AppleLanguages"
+    private const val LANGUAGE_KEY = "AppleLanguages"
 
     private val localLocale = staticCompositionLocalOf { systemLanguage() }
 
@@ -19,9 +19,9 @@ actual object LocalAppLocale {
         val newLocale = value ?: systemLanguage()
 
         if (value == null) {
-            defaults.removeObjectForKey(languageKey)
+            defaults.removeObjectForKey(LANGUAGE_KEY)
         } else {
-            defaults.setObject(listOf(newLocale), forKey = languageKey)
+            defaults.setObject(listOf(newLocale), forKey = LANGUAGE_KEY)
         }
 
         return localLocale.provides(newLocale)

@@ -1,14 +1,19 @@
-import React from 'react';
 import { View, Text, ScrollView, Image, StyleSheet } from 'react-native';
+{{#if hasProfileLinks}}
 import { useRouter } from 'expo-router';
+{{/if}}
 import { ScreenWrapper, AppButton, AppCard, LoadingSpinner } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
-import { useGetProfileQuery } from '../../api/apiSlice';
+import { useGetProfileQuery } from './api';
 import { useAuthStore } from '../../store/authStore';
+import { useTranslation } from '../../i18n';
 
 export default function ProfileScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
+{{#if hasProfileLinks}}
   const router = useRouter();
+{{/if}}
   const { data: profile, isLoading } = useGetProfileQuery();
   const logout = useAuthStore((state) => state.logout);
   const avatarSource = { uri: profile?.avatar || 'https://i.pravatar.cc/150?img=68' };
@@ -20,44 +25,39 @@ export default function ProfileScreen() {
 {{/if}}
   };
 
-  if (isLoading) return <LoadingSpinner fullScreen message="Loading profile..." />;
+  if (isLoading) return <LoadingSpinner fullScreen message={t('profile.loading')} />;
 
   return (
     <ScreenWrapper>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.avatarSection}>
           <Image source={avatarSource} style={styles.avatar} />
-          <Text style={styles.name}>{profile?.name || 'User'}</Text>
+          <Text style={styles.name}>{profile?.name || t('common.user')}</Text>
           <Text style={styles.email}>{profile?.email}</Text>
           {profile?.bio && <Text style={styles.bio}>{profile.bio}</Text>}
         </View>
 
         <AppCard style={styles.infoCard}>
-          <InfoRow label="📧 Email" value={profile?.email || ''} />
-          <InfoRow label="📱 Phone" value={profile?.phone || 'Not set'} />
-          <InfoRow label="📍 Location" value={profile?.location || 'Not set'} />
+          <InfoRow label={`📧 ${t('common.email')}`} value={profile?.email || ''} />
+          <InfoRow label={`📱 ${t('common.phone')}`} value={profile?.phone || t('common.notSet')} />
+          <InfoRow label={`📍 ${t('common.location')}`} value={profile?.location || t('common.notSet')} />
           <InfoRow
-            label="📅 Joined"
+            label={`📅 ${t('common.joined')}`}
             value={profile?.joinedDate ? new Date(profile.joinedDate).toLocaleDateString() : ''}
             isLast
           />
         </AppCard>
 
         <View style={styles.actions}>
-          <AppButton
-            title="Edit Profile"
-            onPress={() => {}}
-            variant="secondary"
-          />
 {{#if hasSettings}}
           <AppButton
-            title="Settings"
+            title={t('common.settings')}
             onPress={() => router.push('/(main)/settings')}
             variant="outline"
           />
 {{/if}}
           <AppButton
-            title="Sign Out"
+            title={t('common.signOut')}
             onPress={handleLogout}
             variant="ghost"
             textStyle={styles.signOut}

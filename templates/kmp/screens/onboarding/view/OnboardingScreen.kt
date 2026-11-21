@@ -37,7 +37,7 @@ private data class Slide(
 
 @Composable
 fun OnboardingScreen(onFinish: () -> Unit = {}) {
-        val slides = listOf(
+    val slides = listOf(
         Slide("🚀", stringResource(Res.string.onboarding_slide1_title), stringResource(Res.string.onboarding_slide1_description)),
         Slide("🔒", stringResource(Res.string.onboarding_slide2_title), stringResource(Res.string.onboarding_slide2_description)),
         Slide("⚡", stringResource(Res.string.onboarding_slide3_title), stringResource(Res.string.onboarding_slide3_description)),

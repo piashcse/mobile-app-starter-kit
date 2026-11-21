@@ -1,18 +1,21 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 {{#if hasAuthLinks}}
 import { useRouter } from 'expo-router';
 {{/if}}
 import {
-  ScreenWrapper,
+  AuthScreen,
   AppButton,
   AppInput,
   LanguageSwitcher,
 } from '../../components';
 import { makeStyles, typography, spacing, borderRadius } from '../../theme';
 import { useTranslation } from '../../i18n';
-import { useLoginMutation } from '../../api/apiSlice';
+import { analytics } from '../../core/observability';
+import { useLoginMutation } from './api';
 import { useAuthStore } from '../../store/authStore';
+import { getErrorMessage } from '../../utils/errors';
+import { isEmail, isStrongPassword } from '../../utils/validation';
 
 export default function SignInScreen() {
   const styles = useStyles();
@@ -30,11 +33,11 @@ export default function SignInScreen() {
   const validate = (): boolean => {
     const newErrors: { email?: string; password?: string } = {};
     if (!email.trim()) newErrors.email = t('auth.signIn.error.emailRequired');
-    else if (!/\S+@\S+\.\S+/.test(email))
+    else if (!isEmail(email))
       newErrors.email = t('auth.signIn.error.emailInvalid');
     if (!password.trim())
       newErrors.password = t('auth.signIn.error.passwordRequired');
-    else if (password.length < 6)
+    else if (!isStrongPassword(password))
       newErrors.password = t('auth.signIn.error.passwordTooShort');
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -45,148 +48,103 @@ export default function SignInScreen() {
     try {
       const result = await login({ email, password }).unwrap();
       authLogin(result.token, result.user);
+      analytics.track({ name: 'sign_in' });
 {{#if canNavigateAfterAuth}}
       router.replace('{{postAuthRoute}}');
 {{/if}}
-    } catch (err: any) {
+    } catch (error: unknown) {
       setErrors({
-        email: err?.data?.message || t('auth.signIn.error.invalidCredentials'),
+        email: getErrorMessage(error, t('auth.signIn.error.invalidCredentials')),
       });
     }
   };
 
   return (
-    <ScreenWrapper>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.header}>
-            <Text
-              style={styles.emoji}
-              accessibilityLabel={t('auth.signIn.logoLabel')}
-            >
-              👋
-            </Text>
-            <Text style={styles.title}>{t('auth.signIn.title')}</Text>
-            <Text style={styles.subtitle}>{t('auth.signIn.subtitle')}</Text>
-          </View>
+    <AuthScreen
+      emoji="👋"
+      emojiLabel={t('auth.signIn.logoLabel')}
+      title={t('auth.signIn.title')}
+      subtitle={t('auth.signIn.subtitle')}
+    >
+      <AppInput
+        label={t('auth.signIn.emailLabel')}
+        placeholder={t('auth.signIn.emailPlaceholder')}
+        value={email}
+        onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        error={errors.email}
+      />
 
-          <View style={styles.form}>
-            <AppInput
-              label={t('auth.signIn.emailLabel')}
-              placeholder={t('auth.signIn.emailPlaceholder')}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              error={errors.email}
-            />
+      <AppInput
+        label={t('auth.signIn.passwordLabel')}
+        placeholder={t('auth.signIn.passwordPlaceholder')}
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+        showPasswordLabel={t('auth.signIn.showPassword')}
+        hidePasswordLabel={t('auth.signIn.hidePassword')}
+        error={errors.password}
+      />
 
-            <AppInput
-              label={t('auth.signIn.passwordLabel')}
-              placeholder={t('auth.signIn.passwordPlaceholder')}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              showPasswordLabel={t('auth.signIn.showPassword')}
-              hidePasswordLabel={t('auth.signIn.hidePassword')}
-              error={errors.password}
-            />
-
-            <AppButton
-              title={t('auth.signIn.submit')}
-              onPress={handleSignIn}
-              loading={isLoading}
-              size="lg"
-            />
+      <AppButton
+        title={t('auth.signIn.submit')}
+        onPress={handleSignIn}
+        loading={isLoading}
+        size="lg"
+      />
 
 {{#if hasForgotPassword}}
-            <AppButton
-              title={t('auth.signIn.forgotPassword')}
-              onPress={() => router.push('/(auth)/forgot-password')}
-              variant="ghost"
-            />
+      <AppButton
+        title={t('auth.signIn.forgotPassword')}
+        onPress={() => router.push('/(auth)/forgot-password')}
+        variant="ghost"
+      />
 {{/if}}
-          </View>
-
 {{#if hasSignUp}}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              {t('auth.signIn.signUpPrompt')}
-            </Text>
-            <AppButton
-              title={t('auth.signIn.signUpAction')}
-              onPress={() => router.push('/(auth)/signup')}
-              variant="outline"
-              size="sm"
-            />
-          </View>
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>{t('auth.signIn.signUpPrompt')}</Text>
+        <AppButton
+          title={t('auth.signIn.signUpAction')}
+          onPress={() => router.push('/(auth)/signup')}
+          variant="outline"
+          size="sm"
+        />
+      </View>
 {{/if}}
 
-          <View style={styles.demo}>
-            <Text style={styles.demoText}>{t('auth.signIn.demo')}</Text>
-          </View>
+      <View style={styles.demo}>
+        <Text style={styles.demoText}>{t('auth.signIn.demo')}</Text>
+      </View>
 
-          <LanguageSwitcher />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </ScreenWrapper>
+      <LanguageSwitcher />
+    </AuthScreen>
   );
 }
 
-const useStyles = makeStyles((colors) => StyleSheet.create({
-  flex: { flex: 1 },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: spacing.lg,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  emoji: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  title: {
-    ...typography.h1,
-    color: colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  form: {
-    gap: spacing.sm,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.xl,
-    gap: spacing.sm,
-  },
-  footerText: {
-    ...typography.body,
-    color: colors.textSecondary,
-  },
-  demo: {
-    marginTop: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-  },
-  demoText: {
-    ...typography.caption,
-    color: colors.textMuted,
-  },
-}));
+const useStyles = makeStyles((colors) =>
+  StyleSheet.create({
+    footer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: spacing.xl,
+      gap: spacing.sm,
+    },
+    footerText: {
+      ...typography.body,
+      color: colors.textSecondary,
+    },
+    demo: {
+      marginTop: spacing.lg,
+      padding: spacing.md,
+      backgroundColor: colors.surface,
+      borderRadius: borderRadius.md,
+      alignItems: 'center',
+    },
+    demoText: {
+      ...typography.caption,
+      color: colors.textMuted,
+    },
+  })
+);

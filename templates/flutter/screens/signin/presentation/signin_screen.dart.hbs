@@ -47,7 +47,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     }
 
     if (_passwordController.text.trim().isNotEmpty &&
-        _passwordController.text.trim().length < 6) {
+        _passwordController.text.trim().length < 8) {
       setState(
         () => _passwordError = l10n.t('auth.signIn.error.passwordTooShort'),
       );

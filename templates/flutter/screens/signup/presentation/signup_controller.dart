@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/signup_repository.dart';
+import '../domain/usecases/signup_usecase.dart';
+import '../providers.dart';
 
 class SignUpState {
   final bool isLoading;
@@ -12,6 +13,8 @@ class SignUpState {
 }
 
 class SignUpController extends Notifier<SignUpState> {
+  late final SignUpUseCase _signUp = ref.read(signUpUseCaseProvider);
+
   @override
   SignUpState build() => const SignUpState();
 
@@ -22,9 +25,7 @@ class SignUpController extends Notifier<SignUpState> {
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await ref
-          .read(signUpRepositoryProvider)
-          .register(name: name, email: email, password: password);
+      await _signUp(name: name, email: email, password: password);
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {

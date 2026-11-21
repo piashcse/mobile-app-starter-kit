@@ -19,7 +19,9 @@ class FaqViewModel(private val apiClient: ApiClient) : BaseViewModel() {
     private val _state = MutableStateFlow(FaqState())
     val state: StateFlow<FaqState> = _state.asStateFlow()
 
-    init { loadFaq() }
+    init {
+        loadFaq()
+    }
 
     private fun loadFaq() {
         viewModelScope.launch {
@@ -31,7 +33,7 @@ class FaqViewModel(private val apiClient: ApiClient) : BaseViewModel() {
 
     fun toggleExpand(id: Int) {
         _state.value = _state.value.copy(
-            expandedId = if (_state.value.expandedId == id) null else id
+            expandedId = if (_state.value.expandedId == id) null else id,
         )
     }
 }

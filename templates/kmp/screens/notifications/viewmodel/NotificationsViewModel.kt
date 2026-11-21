@@ -14,7 +14,9 @@ class NotificationsViewModel(private val apiClient: ApiClient) : BaseViewModel()
     private val _state = MutableStateFlow<UiState<List<NotificationItem>>>(UiState.Loading)
     val state: StateFlow<UiState<List<NotificationItem>>> = _state.asStateFlow()
 
-    init { load() }
+    init {
+        load()
+    }
 
     private fun load() {
         viewModelScope.launch {

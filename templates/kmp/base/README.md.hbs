@@ -41,8 +41,14 @@ compiles the Swift app.
 
 - Shared design tokens: `design-tokens.json`
 - Light/dark theme with a persisted toggle
-- English + Spanish localization with a language switcher on Sign In
+- English + Spanish localization across all screens with a runtime language switcher
 - Add strings to the shared catalog in the CLI and regenerate to extend it
+
+## Tests
+
+```bash
+./gradlew ktlintCheck :composeApp:testDebugUnitTest
+```
 
 ## Architecture
 
@@ -54,7 +60,9 @@ compiles the Swift app.
   content and a runtime language switcher
 - **Typed errors** (`AppError` / `ValidationReason`) with validation in ViewModels
 - **Change password** wired through a ViewModel and the API client
-- **Ktor** client (mock data client included)
+- **Ktor** client with runtime mock switch (`AppConfig.useMockApi`)
+- **Observability** hooks (`AppLogger`, `Analytics`)
+- **ktlint** enforcement (`./gradlew ktlintCheck`)
 - **Manual DI** via `ViewModelProvider`
 
 ## Replacing the mock API

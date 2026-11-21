@@ -24,7 +24,7 @@ Setting up a mobile architecture that scales is time-consuming: navigation, stat
 - 🧩 **Selectable screens** — include only the screens you need.
 - 🎨 **Light/dark themes** — system-aware themes with a working in-app toggle.
 - 🔐 **Persisted auth** — secure session restore on launch.
-- 🏗️ **Best-practice architecture** — Expo Router + RTK Query, Flutter Clean Architecture + Riverpod, Compose Multiplatform + MVVM.
+- 🏗️ **Best-practice architecture** — Expo Router + RTK Query, Flutter feature-first architecture + Riverpod, Compose Multiplatform + MVVM.
 - 🎭 **Mock API built in** — email/password demo auth with simulated latency.
 - 🛠️ **Verified templates** — CI type-checks Expo, analyzes Flutter, and builds the KMP Android app.
 - 📦 **Runnable output** — `.gitignore`, README, assets, native projects, and a Gradle wrapper included.
@@ -50,6 +50,10 @@ npx mobile-app-starter-kit init \
 ```
 
 > **Requirements:** Node.js **22.13+**. Flutter, JDK 17+, and Xcode are only required for the framework you generate.
+
+> **Flutter design libraries:** on Flutter 3.47+ the generator emits the standalone
+> `material_ui` package and decoupled localizations. Older SDKs keep
+> `package:flutter/material.dart` imports.
 
 Check your machine first:
 
@@ -85,16 +89,16 @@ Every generated project is driven by one shared contract, so the three platforms
 
 Included out of the box:
 
-- English + Spanish catalogs and a working language switcher on Sign In.
+- English + Spanish catalogs, runtime language switching, and fully localized screens.
 - Per-platform locale persistence (SecureStore/localStorage, SharedPreferences,
   SharedPreferences/NSUserDefaults).
 - System-aware light/dark themes with an in-app toggle (persisted on Expo/Flutter).
 - Identical palette, type scale, spacing, radii, and component sizing on all three.
 
-The KMP template ships fully localized screens via Compose Multiplatform resources (auth, settings, profile, FAQ,
-notifications, onboarding, about, legal). Expo and Flutter currently localize the
-Sign In reference slice. Add a key to `src/design/strings.ts` and regenerate to
-extend those templates.
+All templates ship fully localized UI copy (auth, settings, profile, FAQ,
+notifications, onboarding, about, legal). KMP uses Compose Multiplatform
+resources; Expo and Flutter use their generated catalogs. Add a key to
+`src/design/strings.ts` and regenerate to extend them.
 
 ---
 
@@ -186,9 +190,10 @@ my-app/
 │   ├── (auth)/
 │   └── (main)/
 ├── src/
-│   ├── api/                # RTK Query mock API
+│   ├── api/                # RTK Query base API + shared mock data
+│   ├── core/               # Config + observability
 │   ├── components/         # Themed UI primitives
-│   ├── features/           # Screen implementations
+│   ├── features/           # Screens + per-feature API slices
 │   ├── store/              # Zustand auth (SecureStore-backed)
 │   └── theme/              # Light/dark palettes + ThemeProvider
 ├── assets/images/          # App icon + splash assets
@@ -206,14 +211,17 @@ my-app/
 ├── lib/
 │   ├── core/
 │   │   ├── api/            # Dio client + mock interceptor
+│   │   ├── config/         # dart-define configuration
 │   │   ├── auth/           # Persisted auth state
+│   │   ├── observability/  # Logger + analytics
 │   │   ├── theme/          # Material 3 themes + mode provider
 │   │   ├── widgets/        # AppButton/AppInput/AppCard
 │   │   └── router/         # GoRouter configuration
 │   └── features/
 │       └── signin/
-│           ├── data/
-│           └── presentation/
+│           ├── data/       # Repository implementations
+│           ├── domain/     # Entities, repositories, use cases
+│           ├── presentation/
 ├── android/                # applicationId matches --package-name
 ├── ios/                    # bundle id matches --package-name
 └── README.md
@@ -228,7 +236,7 @@ my-app/
 my-app/
 ├── composeApp/src/
 │   ├── commonMain/kotlin/
-│   │   ├── core/           # Theme, components, API, ViewModel base
+│   │   ├── core/           # Theme, components, API, config, observability
 │   │   ├── features/       # MVVM feature modules
 │   │   ├── navigation/     # Type-safe Navigation 3
 │   │   └── di/             # ViewModel factories
@@ -266,7 +274,7 @@ Every pull request:
 
 1. Builds the TypeScript CLI and runs unit + generation tests.
 2. Generates a project for each framework.
-3. Runs `tsc --noEmit` and `expo prebuild` for Expo.
+3. Runs `tsc --noEmit`, ESLint, Jest, and `expo prebuild` for Expo.
 4. Runs `flutter pub get` and `flutter analyze` for Flutter.
 5. Runs `./gradlew :androidApp:assembleDebug` for KMP.
 

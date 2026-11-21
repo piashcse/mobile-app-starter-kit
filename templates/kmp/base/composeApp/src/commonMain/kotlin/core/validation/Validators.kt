@@ -3,10 +3,9 @@ package core.validation
 import core.error.ValidationReason
 
 private val emailRegex = Regex("^\\S+@\\S+\\.\\S+$")
-private const val minPasswordLength = 6
+private const val MIN_PASSWORD_LENGTH = 8
 
-fun validateName(value: String): ValidationReason? =
-    if (value.isBlank()) ValidationReason.NameRequired else null
+fun validateName(value: String): ValidationReason? = if (value.isBlank()) ValidationReason.NameRequired else null
 
 fun validateEmail(value: String): ValidationReason? = when {
     value.isBlank() -> ValidationReason.EmailRequired
@@ -21,7 +20,7 @@ fun validateField(
 
 fun validatePassword(value: String): ValidationReason? = when {
     value.isBlank() -> ValidationReason.PasswordRequired
-    value.length < minPasswordLength -> ValidationReason.PasswordTooShort
+    value.length < MIN_PASSWORD_LENGTH -> ValidationReason.PasswordTooShort
     else -> null
 }
 

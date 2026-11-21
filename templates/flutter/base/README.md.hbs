@@ -22,23 +22,35 @@ flutter run
 
 ## Design system & localization
 
+> Flutter 3.47+ projects use `package:material_ui` and decoupled localizations
+> automatically. Older Flutter SDKs use the in-framework Material library.
+
 - Shared design tokens: `design-tokens.json`
 - Light/dark theme with a persisted toggle
-- English + Spanish localization with a language switcher on Sign In
+- English + Spanish localization across all screens
 - Add strings to the shared catalog in the CLI and regenerate to extend it
 
 ## Architecture
 
-- **Clean Architecture** feature folders (`data`, `presentation`)
+- **Feature-first layers** (`data`, `domain`, `presentation`)
 - **Riverpod** state management
 - **GoRouter** navigation with typed routes
-- **Dio** API client with a mock interceptor
+- **Dio** API client with a mock interceptor and shared provider
+- **Use cases** in `domain/` with repository interfaces
+- **Config** via `--dart-define` + logger/analytics abstractions
 - **Material 3** light/dark themes
 
 ## Replacing the mock API
 
-Delete `lib/core/api/mock_interceptor.dart` and change `baseUrl` in
-`lib/core/api/api_client.dart` to point at your backend.
+Set `USE_MOCK_API=false` and `API_BASE_URL` at build time:
+
+```bash
+flutter run \
+  --dart-define=USE_MOCK_API=false \
+  --dart-define=API_BASE_URL=https://api.yourdomain.com
+```
+
+The mock interceptor lives in `lib/core/api/mock_interceptor.dart`.
 
 ## Useful commands
 

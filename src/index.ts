@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { createCli } from './cli.js';
 import { logger } from './utils/logger.js';
 

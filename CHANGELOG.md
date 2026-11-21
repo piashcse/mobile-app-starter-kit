@@ -18,8 +18,8 @@ Expo, Flutter, and KMP starters.
   powering localization on all three platforms.
 - Expo i18n provider (`expo-localization`), Flutter `AppLocalizations` +
   locale provider, and KMP `Strings` + platform locale stores.
-- Working language switcher and localized, accessibility-labelled Sign In
-  screen on every platform.
+- Working language switcher and fully localized UI on every platform
+  (auth, settings, profile, FAQ, notifications, onboarding, about, legal).
 - Full KMP UI localization: every screen (auth, settings, profile, FAQ,
   notifications, onboarding, about, legal) uses Compose Multiplatform resources
   (`composeResources/values*/strings.xml` + `stringResource`).
@@ -41,6 +41,29 @@ Expo, Flutter, and KMP starters.
 - Non-interactive and DX flags: `--yes`, `--force`, `--no-install`, `--no-git`,
   `--dry-run`, `--verbose`.
 - Generation tests and generated-project assertions (`vitest`).
+- Generated unit tests: Flutter localization tests and KMP validator tests.
+- Expo projects include ESLint (`npm run lint`) and strict unused checks.
+- Flutter uses a typed `UserProfile` model, a shared `apiClientProvider`, and
+  `--dart-define` configuration (`USE_MOCK_API`, `API_BASE_URL`).
+- Flutter generation is version-aware: Flutter 3.47+ projects use the
+  standalone `material_ui`/`cupertino_ui` libraries and decoupled
+  localizations; older SDKs keep the in-framework imports.
+- Removed non-functional profile actions and replaced empty Flutter catch
+  blocks with validated submissions and visible errors.
+- Split large CLI generators into focused modules for maintainability.
+- Expo API is split into a base API plus per-feature `injectEndpoints` slices,
+  with Jest tests for validation/error helpers.
+- Expo/Flutter UI copy is fully localized (all screens), not just Sign In.
+- Flutter gained a domain layer (entities, repository interfaces, use cases)
+  for auth, profile, FAQ, notifications, and password flows; controllers and
+  screens depend on use cases rather than API clients.
+- Added config and observability foundations on all three platforms
+  (`appConfig`/`AppConfig`, logger, analytics hooks).
+- KMP projects include ktlint (`./gradlew ktlintCheck`), a Kotlin
+  `.editorconfig`, and a runtime mock-API switch backed by an opt-in Ktor
+  remote implementation.
+- Strict TypeScript checks (`noUnusedLocals`, `noUnusedParameters`,
+  `noImplicitReturns`) and a root `.editorconfig`.
 - SECURITY.md, CODE_OF_CONDUCT.md, issue/PR templates, Dependabot, and an npm
   publish workflow with provenance.
 
@@ -60,6 +83,8 @@ Expo, Flutter, and KMP starters.
 - KMP uses iOS arm64 + simulator arm64 targets (Compose MP no longer publishes
   iosX64 artifacts).
 - CI now builds, tests, and verifies generated Expo, Flutter, and KMP projects.
+- Expo auth screens share an `AuthScreen` layout, and unused catalog keys and
+  template dependencies were removed.
 - README, CONTRIBUTING, license year, package metadata, and repository URLs.
 
 ### Fixed

@@ -30,7 +30,7 @@ export async function generateFlutterProject(
   await copyTemplateDir(baseDir, config.outputDir, context);
   await writeFlutterDesign(config.outputDir);
 
-  // Step 3: Copy selected screen features (Clean Architecture)
+  // Step 3: Copy selected screen features (feature-first layers)
   logger.step(3, 5, 'Adding selected features...');
   for (const screenId of config.screens) {
     const screenSrcDir = path.join(screensDir, screenId);
@@ -59,11 +59,106 @@ export async function generateFlutterProject(
   logger.step(5, 5, 'Setting up Riverpod providers...');
   await generateFlutterProviders(config);
 
+  // Flutter 3.47+ ships the design systems as standalone packages. Keep older
+  // SDKs on the in-framework imports while generating the modern layout for
+  // current Flutter releases.
+  const frameworkVersion = getFlutterFrameworkVersion();
+  if (frameworkVersion && versionAtLeast(frameworkVersion, [3, 47, 0])) {
+    await modernizeDesignSystem(config.outputDir);
+  }
+
   if (!nativeReady) {
     logger.warn(
       'Flutter SDK was not found, so android/ and ios/ were not generated.\n' +
         'Install Flutter, then run "flutter create ." inside the project.'
     );
+  }
+}
+
+function getFlutterFrameworkVersion(): string | null {
+  const result = spawnSync('flutter', ['--version', '--machine'], {
+    encoding: 'utf-8',
+    stdio: 'pipe',
+    shell: process.platform === 'win32',
+  });
+  if (result.status !== 0 || !result.stdout) return null;
+  try {
+    const info = JSON.parse(result.stdout) as { frameworkVersion?: string };
+    return info.frameworkVersion ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function versionAtLeast(version: string, minimum: number[]): boolean {
+  const parts = version
+    .split(/[.-]/)
+    .slice(0, 3)
+    .map((part) => Number.parseInt(part, 10) || 0);
+  for (let index = 0; index < minimum.length; index += 1) {
+    const current = parts[index] ?? 0;
+    if (current > minimum[index]) return true;
+    if (current < minimum[index]) return false;
+  }
+  return true;
+}
+
+export async function modernizeDesignSystem(outputDir: string): Promise<void> {
+  const pubspecPath = path.join(outputDir, 'pubspec.yaml');
+  if (await fs.pathExists(pubspecPath)) {
+    let pubspec = await fs.readFile(pubspecPath, 'utf-8');
+    pubspec = pubspec.replace(
+      /\n  flutter_localizations:\n    sdk: flutter/,
+      ''
+    );
+    pubspec = pubspec.replace(/\n  intl: [^\n]+/, '');
+    if (!pubspec.includes('material_ui:')) {
+      pubspec = pubspec.replace(
+        /\n  flutter:\n    sdk: flutter/,
+        '\n  flutter:\n    sdk: flutter\n  material_ui: ^1.11.1'
+      );
+    }
+    await fs.writeFile(pubspecPath, pubspec, 'utf-8');
+  }
+
+  const appPath = path.join(outputDir, 'lib', 'app.dart');
+  if (await fs.pathExists(appPath)) {
+    let app = await fs.readFile(appPath, 'utf-8');
+    app = app.replace(
+      "import 'package:flutter_localizations/flutter_localizations.dart';\n",
+      ''
+    );
+    app = app.replace(
+      /\n      localizationsDelegates: const \[\n        AppLocalizations\.delegate,\n        GlobalMaterialLocalizations\.delegate,\n        GlobalWidgetsLocalizations\.delegate,\n        GlobalCupertinoLocalizations\.delegate,\n      \],/,
+      '\n      localizationsDelegates: [\n        AppLocalizations.delegate,\n        ...GlobalMaterialLocalizations.delegates,\n      ],'
+    );
+    await fs.writeFile(appPath, app, 'utf-8');
+  }
+
+  for (const root of ['lib', 'test']) {
+    const dir = path.join(outputDir, root);
+    if (await fs.pathExists(dir)) {
+      await rewriteDartImports(dir);
+    }
+  }
+}
+
+async function rewriteDartImports(dir: string): Promise<void> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      await rewriteDartImports(fullPath);
+    } else if (entry.name.endsWith('.dart')) {
+      const content = await fs.readFile(fullPath, 'utf-8');
+      const updated = content.replace(
+        /package:flutter\/material\.dart/g,
+        'package:material_ui/material_ui.dart'
+      );
+      if (updated !== content) {
+        await fs.writeFile(fullPath, updated, 'utf-8');
+      }
+    }
   }
 }
 

@@ -32,22 +32,24 @@ npx expo prebuild
 
 - Shared design tokens: `design-tokens.json`
 - Light/dark theme with a persisted toggle
-- English + Spanish localization with a language switcher on Sign In
+- English + Spanish localization across all screens
 - Add strings to the shared catalog in the CLI and regenerate to extend it
 
 ## Architecture
 
 - **Expo Router** file-based navigation (`app/`)
-- **RTK Query** mock API (`src/api`)
+- **RTK Query** base API (`src/api/baseApi.ts`) + per-feature endpoints (`src/features/*/api.ts`)
 - **Zustand** auth store with secure persistence (`src/store`)
 - **Feature folders** for screens (`src/features`)
 - **Design tokens** with light/dark themes (`src/theme`)
+- **Config + observability** (`src/core`)
 
 ## Replacing the mock API
 
 The RTK Query slice uses `fakeBaseQuery` with data from `src/api/mockData.ts`.
-Replace `baseQuery` in `src/api/apiSlice.ts` with `fetchBaseQuery` pointing at
-your backend, then delete `mockData.ts`.
+Replace the mock endpoints in `src/features/<feature>/api.ts` with real
+requests using `fetchBaseQuery` in `src/api/baseApi.ts`, then delete
+`mockData.ts`.
 
 ## Scripts
 
@@ -58,3 +60,5 @@ your backend, then delete `mockData.ts`.
 | `npm run ios` | Start on iOS |
 | `npm run web` | Start on the web |
 | `npm run typecheck` | TypeScript check |
+| `npm test` | Jest unit tests |
+| `npm run lint` | ESLint |

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { View, Text, ScrollView, Switch, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ScreenWrapper, AppCard } from '../../components';
 import { makeStyles, useAppTheme, typography, spacing } from '../../theme';
 import { mockData } from '../../api/mockData';
+import { useTranslation } from '../../i18n';
 
 interface SettingItem {
   id: string;
@@ -15,6 +16,7 @@ interface SettingItem {
 
 export default function SettingsScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   const { colors, isDark, toggleScheme } = useAppTheme();
   const router = useRouter();
   const switchTrackColor = {
@@ -33,34 +35,34 @@ export default function SettingsScreen() {
 
   const accountItems: SettingItem[] = [
 {{#if hasChangePassword}}
-    { id: 'change-password', label: 'Change Password', icon: '🔑', type: 'navigate', route: '/(main)/change-password' },
+    { id: 'change-password', label: t('settings.changePassword'), icon: '🔑', type: 'navigate', route: '/(main)/change-password' },
 {{/if}}
 {{#if hasPrivacyPolicy}}
-    { id: 'privacy-policy', label: 'Privacy Policy', icon: '🛡️', type: 'navigate', route: '/(main)/privacy-policy' },
+    { id: 'privacy-policy', label: t('settings.privacyPolicy'), icon: '🛡️', type: 'navigate', route: '/(main)/privacy-policy' },
 {{/if}}
 {{#if hasTerms}}
-    { id: 'terms', label: 'Terms of Service', icon: '📄', type: 'navigate', route: '/(main)/terms' },
+    { id: 'terms', label: t('settings.termsOfService'), icon: '📄', type: 'navigate', route: '/(main)/terms' },
 {{/if}}
 {{#if hasFaq}}
-    { id: 'faq', label: 'FAQ', icon: '❓', type: 'navigate', route: '/(main)/faq' },
+    { id: 'faq', label: t('settings.faq'), icon: '❓', type: 'navigate', route: '/(main)/faq' },
 {{/if}}
 {{#if hasAbout}}
-    { id: 'about', label: 'About', icon: 'ℹ️', type: 'navigate', route: '/(main)/about' },
+    { id: 'about', label: t('settings.about'), icon: 'ℹ️', type: 'navigate', route: '/(main)/about' },
 {{/if}}
   ];
 
   const sections: { title: string; items: SettingItem[] }[] = [
     {
-      title: 'Preferences',
+      title: t('settings.preferences'),
       items: [
-        { id: 'notifications', label: 'Push Notifications', icon: '🔔', type: 'toggle' },
-        { id: 'appearance', label: 'Dark Mode', icon: '🌙', type: 'toggle' },
-        { id: 'biometrics', label: 'Biometric Login', icon: '🔒', type: 'toggle' },
-        { id: 'analytics', label: 'Usage Analytics', icon: '📊', type: 'toggle' },
+        { id: 'notifications', label: t('settings.pushNotifications'), icon: '🔔', type: 'toggle' },
+        { id: 'appearance', label: t('settings.darkMode'), icon: '🌙', type: 'toggle' },
+        { id: 'biometrics', label: t('settings.biometricLogin'), icon: '🔒', type: 'toggle' },
+        { id: 'analytics', label: t('settings.usageAnalytics'), icon: '📊', type: 'toggle' },
       ],
     },
     ...(accountItems.length > 0
-      ? [{ title: 'Account', items: accountItems }]
+      ? [{ title: t('settings.account'), items: accountItems }]
       : []),
   ];
 
@@ -80,7 +82,7 @@ export default function SettingsScreen() {
   return (
     <ScreenWrapper>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.title}>Settings</Text>
+        <Text style={styles.title}>{t('settings.title')}</Text>
 
         {sections.map((section) => (
           <View key={section.title} style={styles.section}>
@@ -121,7 +123,7 @@ export default function SettingsScreen() {
         ))}
 
         <Text style={styles.version}>
-          Version {mockData.app.about.version}
+          {t('common.version', { version: mockData.app.about.version })}
         </Text>
       </ScrollView>
     </ScreenWrapper>

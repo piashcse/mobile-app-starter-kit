@@ -34,14 +34,13 @@ import core.theme.AppSizes
 import core.theme.AppSpacing
 import core.viewmodel.UiState
 import di.ViewModelProvider
-import features.notifications.viewmodel.NotificationsViewModel
 
 @Composable
 fun NotificationsScreen() {
     val viewModel = remember { ViewModelProvider.notificationsViewModel() }
     DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val state by viewModel.state.collectAsState()
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()

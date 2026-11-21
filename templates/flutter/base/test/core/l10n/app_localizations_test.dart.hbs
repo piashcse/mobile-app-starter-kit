@@ -1,0 +1,19 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:{{dartPackage}}/core/l10n/app_localizations.dart';
+
+void main() {
+  test('translates English and Spanish copy', () {
+    const english = AppLocalizations(Locale('en'));
+    const spanish = AppLocalizations(Locale('es'));
+
+    expect(english.t('auth.signIn.title'), 'Welcome Back');
+    expect(spanish.t('auth.signIn.title'), 'Bienvenido de nuevo');
+    expect(spanish.t('settings.title'), 'Ajustes');
+  });
+
+  test('falls back to English for unsupported locales', () {
+    const french = AppLocalizations(Locale('fr'));
+    expect(french.t('auth.signIn.title'), 'Welcome Back');
+  });
+}

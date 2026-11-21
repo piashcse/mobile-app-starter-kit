@@ -1,15 +1,15 @@
-import React from 'react';
 import { ScrollView, Text, StyleSheet } from 'react-native';
 import { ScreenWrapper } from '../../components';
 import { makeStyles, typography, spacing } from '../../theme';
-import { mockData } from '../../api/mockData';
+import { useTranslation } from '../../i18n';
 
 export default function TermsScreen() {
   const styles = useStyles();
+  const { t } = useTranslation();
   return (
     <ScreenWrapper>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.content}>{mockData.app.terms}</Text>
+        <Text style={styles.content}>{t('legal.terms')}</Text>
       </ScrollView>
     </ScreenWrapper>
   );
