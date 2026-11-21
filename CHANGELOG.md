@@ -2,6 +2,28 @@
 
 All notable changes to this project are documented here.
 
+## 2.1.0 — 2026-11-21
+
+### Changed
+
+- KMP now uses Compose Multiplatform 1.12.2, Navigation 3 1.2.0, AGP 9.5.2,
+  Gradle 9.9.2, and compileSdk/targetSdk 37.
+- KMP shared module migrated to the `com.android.kotlin.multiplatform.library`
+  plugin (AGP 9 layout), with Android host tests enabled.
+- Expo template dependencies refreshed (Redux Toolkit 2.15, React Redux 9.3,
+  Zustand 5.1, Babel 7.29) and TypeScript moved to 6.0.3.
+- Flutter template dependencies refreshed (Dio 5.11, SharedPreferences 2.5.6,
+  cached_network_image 4.0.3, url_launcher 6.3.3).
+
+### Fixed
+
+- The interactive `init` flow now uses Inquirer 14's `select` prompt type.
+  Inquirer 14 removed `list`, which caused the framework picker to crash with
+  `Prompt type "list" is not registered`.
+- Interactive `init` now actually asks whether to install dependencies and
+  initialize Git; `--dry-run` no longer shows those choices.
+- The project summary reports the chosen install and Git options.
+
 ## 2.0.0 — 2026-11-21
 
 First release since `1.0.2`. This release makes every generated template
