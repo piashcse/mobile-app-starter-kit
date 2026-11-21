@@ -81,7 +81,7 @@ Every generated project is driven by one shared contract, so the three platforms
 - **Strings** — `src/design/strings.ts` generates:
   - `src/i18n/*` (Expo, `expo-localization`)
   - `lib/core/l10n/*` (Flutter, `flutter_localizations`)
-  - `core/i18n/*` (KMP, `CompositionLocal`)
+  - `composeResources/values*/strings.xml` (KMP, generated `Res` + `stringResource`)
 
 Included out of the box:
 
@@ -91,8 +91,10 @@ Included out of the box:
 - System-aware light/dark themes with an in-app toggle (persisted on Expo/Flutter).
 - Identical palette, type scale, spacing, radii, and component sizing on all three.
 
-The localized Sign In screen is the reference implementation. Add a key to
-`src/design/strings.ts` and regenerate to extend localization to more screens.
+The KMP template ships fully localized screens via Compose Multiplatform resources (auth, settings, profile, FAQ,
+notifications, onboarding, about, legal). Expo and Flutter currently localize the
+Sign In reference slice. Add a key to `src/design/strings.ts` and regenerate to
+extend those templates.
 
 ---
 

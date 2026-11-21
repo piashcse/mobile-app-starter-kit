@@ -378,8 +378,7 @@ describe('generated projects', () => {
       ),
       'utf-8'
     );
-    expect(signIn).toContain('LocalStrings.current');
-    expect(signIn).toContain('strings.authSignInTitle');
+    expect(signIn).toContain('stringResource(Res.string.auth_sign_in_title)');
     expect(signIn).toContain('LanguageSwitcher');
     expect(signIn).not.toContain('Welcome Back');
     expect(navigation).toContain('NavDisplay(');
@@ -393,13 +392,98 @@ describe('generated projects', () => {
           'composeApp',
           'src',
           'commonMain',
-          'kotlin',
-          'core',
-          'i18n',
-          'Strings.kt'
+          'composeResources',
+          'values',
+          'strings.xml'
         )
       )
     ).toBe(true);
+    expect(
+      await fs.pathExists(
+        path.join(
+          dir,
+          'composeApp',
+          'src',
+          'commonMain',
+          'composeResources',
+          'values-es',
+          'strings.xml'
+        )
+      )
+    ).toBe(true);
+
+    const englishStrings = await fs.readFile(
+      path.join(
+        dir,
+        'composeApp',
+        'src',
+        'commonMain',
+        'composeResources',
+        'values',
+        'strings.xml'
+      ),
+      'utf-8'
+    );
+    const spanishStrings = await fs.readFile(
+      path.join(
+        dir,
+        'composeApp',
+        'src',
+        'commonMain',
+        'composeResources',
+        'values-es',
+        'strings.xml'
+      ),
+      'utf-8'
+    );
+    expect(englishStrings).toContain('name="auth_sign_in_title"');
+    expect(englishStrings).toContain('Welcome Back');
+    expect(spanishStrings).toContain('Bienvenido de nuevo');
+    expect(
+      await fs.pathExists(
+        path.join(
+          dir,
+          'composeApp',
+          'src',
+          'commonMain',
+          'kotlin',
+          'core',
+          'error',
+          'AppError.kt'
+        )
+      )
+    ).toBe(true);
+    expect(
+      await fs.pathExists(
+        path.join(
+          dir,
+          'composeApp',
+          'src',
+          'commonMain',
+          'kotlin',
+          'core',
+          'validation',
+          'Validators.kt'
+        )
+      )
+    ).toBe(true);
+
+    const settings = await fs.readFile(
+      path.join(
+        dir,
+        'composeApp',
+        'src',
+        'commonMain',
+        'kotlin',
+        'features',
+        'settings',
+        'view',
+        'SettingsScreen.kt'
+      ),
+      'utf-8'
+    );
+    expect(settings).toContain('stringResource(Res.string.settings_title)');
+    expect(settings).not.toContain('PREFERENCES');
     expect(
       await fs.pathExists(
         path.join(

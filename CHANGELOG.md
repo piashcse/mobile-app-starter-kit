@@ -20,6 +20,14 @@ Expo, Flutter, and KMP starters.
   locale provider, and KMP `Strings` + platform locale stores.
 - Working language switcher and localized, accessibility-labelled Sign In
   screen on every platform.
+- Full KMP UI localization: every screen (auth, settings, profile, FAQ,
+  notifications, onboarding, about, legal) uses Compose Multiplatform resources
+  (`composeResources/values*/strings.xml` + `stringResource`).
+- Official runtime locale override (`LocalAppLocale` + `CompositionLocal` and
+  `key(locale)`) so the language switcher updates resources on Android and iOS.
+- Typed KMP error model (`AppError` / `ValidationReason`) with validation moved
+  into ViewModels and localized only at the presentation boundary.
+- KMP change-password now has a real ViewModel with validation and API wiring.
 - Working light/dark themes with an in-app toggle (persisted on Expo/Flutter).
 - Persisted auth sessions (Expo SecureStore, Flutter SharedPreferences).
 - **Navigation 3** for KMP (`org.jetbrains.androidx.navigation3`) with a

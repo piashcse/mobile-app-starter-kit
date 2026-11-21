@@ -2,6 +2,10 @@ package features.signin.viewmodel
 
 import core.api.ApiClient
 import core.api.LoginResponse
+import core.error.AppError
+import core.error.toAppError
+import core.validation.validateEmail
+import core.validation.validatePassword
 import core.viewmodel.BaseViewModel
 import core.viewmodel.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,16 +32,29 @@ class SignInViewModel(private val apiClient: ApiClient) : BaseViewModel() {
     }
 
     fun signIn(onSuccess: () -> Unit) {
+        val current = _state.value
+        val validation = validateEmail(current.email)
+            ?: validatePassword(current.password)
+
+        if (validation != null) {
+            _state.value = current.copy(
+                loginState = UiState.Error(AppError.Validation(validation))
+            )
+            return
+        }
+
         viewModelScope.launch {
-            _state.value = _state.value.copy(loginState = UiState.Loading)
-            apiClient.login(_state.value.email, _state.value.password)
+            _state.value = current.copy(loginState = UiState.Loading)
+            apiClient.login(current.email.trim(), current.password)
                 .onSuccess { response ->
-                    _state.value = _state.value.copy(loginState = UiState.Success(response))
+                    _state.value = _state.value.copy(
+                        loginState = UiState.Success(response)
+                    )
                     onSuccess()
                 }
                 .onFailure { error ->
                     _state.value = _state.value.copy(
-                        loginState = UiState.Error(error.message ?: "Login failed")
+                        loginState = UiState.Error(error.toAppError())
                     )
                 }
         }

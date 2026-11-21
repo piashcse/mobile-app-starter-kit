@@ -10,6 +10,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import app.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun AppInput(
@@ -19,13 +21,15 @@ fun AppInput(
     label: String? = null,
     placeholder: String? = null,
     isPassword: Boolean = false,
-    showPasswordLabel: String = "Show",
-    hidePasswordLabel: String = "Hide",
+    showPasswordLabel: String? = null,
+    hidePasswordLabel: String? = null,
     error: String? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     enabled: Boolean = true,
     singleLine: Boolean = true,
 ) {
+    val showLabel = showPasswordLabel ?: stringResource(Res.string.common_show_password)
+    val hideLabel = hidePasswordLabel ?: stringResource(Res.string.common_hide_password)
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxWidth()) {
@@ -56,7 +60,7 @@ fun AppInput(
                 {
                     TextButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                         Text(
-                            if (isPasswordVisible) hidePasswordLabel else showPasswordLabel,
+                            if (isPasswordVisible) hideLabel else showLabel,
                             color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodySmall,
                         )

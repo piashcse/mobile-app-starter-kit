@@ -2,6 +2,7 @@ package features.profile.viewmodel
 
 import core.api.ApiClient
 import core.api.UserProfile
+import core.error.toAppError
 import core.viewmodel.BaseViewModel
 import core.viewmodel.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +21,7 @@ class ProfileViewModel(private val apiClient: ApiClient) : BaseViewModel() {
             _state.value = UiState.Loading
             apiClient.getProfile()
                 .onSuccess { _state.value = UiState.Success(it) }
-                .onFailure { _state.value = UiState.Error(it.message ?: "Failed") }
+                .onFailure { error -> _state.value = UiState.Error(error.toAppError()) }
         }
     }
 }

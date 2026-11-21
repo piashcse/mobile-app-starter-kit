@@ -5,6 +5,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import app.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -16,8 +18,8 @@ import androidx.compose.ui.unit.dp
 import core.components.AppButton
 import core.components.AppGhostButton
 import core.components.AppInput
+import core.error.localized
 import core.i18n.LanguageSwitcher
-import core.i18n.LocalStrings
 import core.viewmodel.UiState
 import features.signin.viewmodel.SignInViewModel
 import di.ViewModelProvider
@@ -31,7 +33,7 @@ fun SignInScreen(
     val viewModel = remember { ViewModelProvider.signInViewModel() }
     DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val state by viewModel.state.collectAsState()
-    val strings = LocalStrings.current
+    val logoLabel = stringResource(Res.string.auth_sign_in_logo_label)
 
     Column(
         modifier = Modifier
@@ -45,20 +47,20 @@ fun SignInScreen(
             "👋",
             style = MaterialTheme.typography.displayLarge,
             modifier = Modifier.semantics {
-                contentDescription = strings.authSignInLogoLabel
+                contentDescription = logoLabel
             },
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            strings.authSignInTitle,
+            stringResource(Res.string.auth_sign_in_title),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground,
         )
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            strings.authSignInSubtitle,
+            stringResource(Res.string.auth_sign_in_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -67,24 +69,22 @@ fun SignInScreen(
         AppInput(
             value = state.email,
             onValueChange = viewModel::updateEmail,
-            label = strings.authSignInEmailLabel,
-            placeholder = strings.authSignInEmailPlaceholder,
+            label = stringResource(Res.string.auth_sign_in_email_label),
+            placeholder = stringResource(Res.string.auth_sign_in_email_placeholder),
             keyboardType = KeyboardType.Email,
         )
 
         AppInput(
             value = state.password,
             onValueChange = viewModel::updatePassword,
-            label = strings.authSignInPasswordLabel,
-            placeholder = strings.authSignInPasswordPlaceholder,
+            label = stringResource(Res.string.auth_sign_in_password_label),
+            placeholder = stringResource(Res.string.auth_sign_in_password_placeholder),
             isPassword = true,
-            showPasswordLabel = strings.authSignInShowPassword,
-            hidePasswordLabel = strings.authSignInHidePassword,
         )
 
         if (state.loginState is UiState.Error) {
             Text(
-                strings.authSignInErrorInvalidCredentials,
+                (state.loginState as UiState.Error).error.localized(),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(bottom = 16.dp),
@@ -92,13 +92,13 @@ fun SignInScreen(
         }
 
         AppButton(
-            text = strings.authSignInSubmit,
+            text = stringResource(Res.string.auth_sign_in_submit),
             onClick = { viewModel.signIn(onSignInSuccess) },
             isLoading = state.loginState is UiState.Loading,
         )
 
         AppGhostButton(
-            text = strings.authSignInForgotPassword,
+            text = stringResource(Res.string.auth_sign_in_forgot_password),
             onClick = onNavigateToForgotPassword,
         )
 
@@ -108,11 +108,11 @@ fun SignInScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                strings.authSignInSignUpPrompt,
+                stringResource(Res.string.auth_sign_in_sign_up_prompt),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             AppGhostButton(
-                text = strings.authSignInSignUpAction,
+                text = stringResource(Res.string.auth_sign_in_sign_up_action),
                 onClick = onNavigateToSignUp,
             )
         }
@@ -124,7 +124,7 @@ fun SignInScreen(
             shape = RoundedCornerShape(12.dp),
         ) {
             Text(
-                strings.authSignInDemo,
+                stringResource(Res.string.auth_sign_in_demo),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(12.dp),

@@ -2,6 +2,7 @@ package features.faq.viewmodel
 
 import core.api.ApiClient
 import core.api.FaqItem
+import core.error.toAppError
 import core.viewmodel.BaseViewModel
 import core.viewmodel.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,7 @@ class FaqViewModel(private val apiClient: ApiClient) : BaseViewModel() {
         viewModelScope.launch {
             apiClient.getFaqItems()
                 .onSuccess { _state.value = _state.value.copy(items = UiState.Success(it)) }
-                .onFailure { _state.value = _state.value.copy(items = UiState.Error(it.message ?: "Failed")) }
+                .onFailure { error -> _state.value = _state.value.copy(items = UiState.Error(error.toAppError())) }
         }
     }
 

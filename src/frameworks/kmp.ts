@@ -148,6 +148,7 @@ kotlin.code.style=official
 agp = "${AGP_VERSION}"
 kotlin = "${KOTLIN_VERSION}"
 compose-multiplatform = "${COMPOSE_VERSION}"
+compose-material3 = "1.9.0"
 ktor = "${KTOR_VERSION}"
 navigation3 = "${NAVIGATION_VERSION}"
 kotlinx-coroutines = "${COROUTINES_VERSION}"
@@ -158,6 +159,11 @@ android-targetSdk = "${TARGET_SDK}"
 androidx-activityCompose = "${ACTIVITY_COMPOSE_VERSION}"
 
 [libraries]
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-material3" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+compose-components-resources = { module = "org.jetbrains.compose.components:components-resources", version.ref = "compose-multiplatform" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "androidx-activityCompose" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
@@ -196,6 +202,10 @@ plugins {
 }
 
 kotlin {
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
+
     androidTarget {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_17)
@@ -211,10 +221,11 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(compose.runtime)
-            implementation(compose.foundation)
-            implementation(compose.material3)
-            implementation(compose.ui)
+            implementation(libs.compose.runtime)
+            implementation(libs.compose.foundation)
+            implementation(libs.compose.material3)
+            implementation(libs.compose.ui)
+            implementation(libs.compose.components.resources)
             implementation(libs.navigation3.ui)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.content.negotiation)
@@ -243,6 +254,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+compose.resources {
+    packageOfResClass = "app.generated.resources"
 }
 `;
   await fs.writeFile(
@@ -601,6 +616,13 @@ async function generateKmpNavigation(
           `onSuccess = { resetTo(${screenIdToCases(postAuthId).pascal}) }`
         );
       }
+      if (selected.has('signin')) {
+        args.push('onNavigateToSignIn = { resetTo(SignIn) }');
+      }
+    }
+
+    if (screenId === 'change-password') {
+      args.push('onSuccess = { backStack.removeLastOrNull() }');
     }
 
     if (screenId === 'forgot-password') {
@@ -683,6 +705,7 @@ sealed interface AppRoute : NavKey
 
 ${routes.join('\n')}
 
+@OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
 private val navConfig = SavedStateConfiguration {
     serializersModule = SerializersModule {
         polymorphic(NavKey::class) {

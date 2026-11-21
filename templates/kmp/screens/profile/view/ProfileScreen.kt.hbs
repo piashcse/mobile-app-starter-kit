@@ -5,6 +5,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import app.generated.resources.*
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,6 +15,9 @@ import androidx.compose.ui.unit.dp
 import core.components.AppButton
 import core.components.AppCard
 import core.components.AppGhostButton
+import core.error.localized
+import core.theme.AppSizes
+import core.theme.AppSpacing
 import core.viewmodel.UiState
 import features.profile.viewmodel.ProfileViewModel
 import di.ViewModelProvider
@@ -25,18 +30,21 @@ fun ProfileScreen(
     val viewModel = remember { ViewModelProvider.profileViewModel() }
     DisposableEffect(viewModel) { onDispose { viewModel.onCleared() } }
     val state by viewModel.state.collectAsState()
-
+    
     when (val s = state) {
         is UiState.Loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
         is UiState.Error -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(s.message, color = MaterialTheme.colorScheme.error)
+            Text(
+                s.error.localized(),
+                color = MaterialTheme.colorScheme.error,
+            )
         }
         is UiState.Success -> {
             val profile = s.data
             Column(
-                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
+                modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(AppSizes.screenPadding),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 // Avatar placeholder
@@ -58,22 +66,22 @@ fun ProfileScreen(
 
                 Spacer(Modifier.height(24.dp))
                 AppCard {
-                    InfoRow("📧", "Email", profile.email)
+                    InfoRow("📧", stringResource(Res.string.common_email), profile.email)
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    InfoRow("📱", "Phone", profile.phone ?: "Not set")
+                    InfoRow("📱", stringResource(Res.string.common_phone), profile.phone ?: stringResource(Res.string.common_not_set))
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                    InfoRow("📍", "Location", profile.location ?: "Not set")
+                    InfoRow("📍", stringResource(Res.string.common_location), profile.location ?: stringResource(Res.string.common_not_set))
                 }
 
                 Spacer(Modifier.height(16.dp))
-                AppButton(text = "Edit Profile", onClick = {}, isOutlined = true)
+                AppButton(text = stringResource(Res.string.common_edit_profile), onClick = {}, isOutlined = true)
 {{#if hasSettings}}
                 Spacer(Modifier.height(8.dp))
-                AppButton(text = "Settings", onClick = onNavigateToSettings, isOutlined = true)
+                AppButton(text = stringResource(Res.string.common_settings), onClick = onNavigateToSettings, isOutlined = true)
 {{/if}}
 {{#if hasSignIn}}
                 Spacer(Modifier.height(8.dp))
-                AppGhostButton(text = "Sign Out", onClick = onSignOut)
+                AppGhostButton(text = stringResource(Res.string.common_sign_out), onClick = onSignOut)
 {{/if}}
             }
         }
